@@ -106,6 +106,8 @@ const csatBadges = ref([
     ["bg-[#90BE6D]", "Good"],
     ["bg-[#F94144]", "Bad"],
 ]);
+
+
 const updatePeriode = (value: string) => {
     period.value = value;
 };
