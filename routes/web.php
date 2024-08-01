@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthLoginController;
+use App\Http\Controllers\Dashboard\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -25,11 +26,11 @@ Route::controller(AuthLoginController::class)
      ->group(function () {
           Route::get('/', 'index')->name('index');
      });
-Route::controller(AuthForgotPasswordController::class)
-     ->prefix('forgot-password')
-     ->as('auth.forgot-password.')
+
+Route::middleware(['me-auth', 'idle-logout'])
      ->group(function () {
-          Route::get('/', 'index')->name('index');
-          Route::get('/verification/{token}', 'verification')->name('otp-verification');
-          Route::get('/change-password/{token}', 'changePassword')->name('change-password');
+          Route::get('/logout', [AuthLoginController::class, 'logout'])->name('auth.logout');
+
+          Route::get("/", [DashboardController::class, "index"])->name("index");
+          
      });

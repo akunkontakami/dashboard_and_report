@@ -25,11 +25,9 @@ class AuthLoginController extends Controller
         try {
             $loginAction->execute($request);
 
-            return to_route('ticket.index');
+            return to_route('index');
         } catch (BadRequestException $e) {
             return back()->with(['error' => $e->getMessage()]);
-        } catch (RedirectRequestException $e) {
-            return redirect($e->getMessage());
         }
     }
 

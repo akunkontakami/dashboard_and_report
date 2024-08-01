@@ -24,8 +24,13 @@
                 icon="isax icon-profile-2user"
                 :error="form.errors.role"
             >
-                <option value="ba">Business Account - Superadmin</option>
-                <option value="admin">Business Account - Admin</option>
+                <option
+                    v-for="row in roles"
+                    :value="row.type"
+                    :selected="form.role === row.type"
+                >
+                    {{ row.text }}
+                </option>
             </Select>
             <Input
                 type="email"
@@ -47,15 +52,6 @@
                 v-model="form.password"
                 :error="form.errors.password"
             />
-            <p class="text-center text-[14px] font-krub-medium mb-4 mt-7">
-                Forgot your password ?
-                <Link
-                    :href="route('auth.forgot-password.index')"
-                    class="text-yellow underline"
-                >
-                    click here
-                </Link>
-            </p>
             <ButtonYellow
                 type="submit"
                 :disabled="!form.email || !form.password || form.processing"
@@ -75,19 +71,38 @@ import InputPassword from "@/Components/Input/Password.vue";
 import Select from "@/Components/Input/Select.vue";
 import ButtonYellow from "@/Components/Button/ButtonYellow.vue";
 import { joinConnectionBroadcast } from "@/socket";
-import { useForm, Link } from "@inertiajs/vue3";
+import { useForm } from "@inertiajs/vue3";
+import { ref } from "vue";
 
-const props = defineProps([
-    "phone_country",
-    "term_condition",
-    "privacy_policy",
-]);
+
 const form = useForm({
     role: "ba",
     email: "",
     password: "",
 });
 
+const roles = ref([
+    {
+        type: "ba",
+        text: "Business Account - Superadmin",
+    },
+    {
+        type: "admin",
+        text: "Business Account - Admin",
+    },
+    {
+        type: "am",
+        text: "AM",
+    },
+    {
+        type: "spv",
+        text: "Supervisor",
+    },
+    {
+        type: "spv_escalation",
+        text: "Escalation SPV",
+    },
+]);
 const submit = () => {
     if (!form.processing) {
         form.post(route("auth.login.store"), {

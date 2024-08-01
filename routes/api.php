@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthLoginController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,3 +15,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::controller(AuthLoginController::class)
+     ->prefix('login')
+     ->as('auth.login.')
+     ->group(function () {
+          Route::post('/store', 'store')->name('store');
+     });

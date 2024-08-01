@@ -8,12 +8,6 @@
             <AppLogoSm class="md:hidden w-[35px] h-[35px]" />
         </div>
         <ul class="flex gap-2 items-center">
-            <li x-data="{ dropdownNotification: false }">
-                <DropdownNotification />
-            </li>
-            <li>
-                <span class="border-l border-darks"></span>
-            </li>
             <li x-data="{ dropdownProfile: false }">
                 <button
                     type="button"
@@ -21,10 +15,16 @@
                     x-ref="dropdownProfile"
                     x-on:click="dropdownProfile=true"
                 >
-                    <div class="w-[150px]">
-                        <b class="text-[12px] line-clamp-2" id="header-user-name">
-                        {{ user.name }}
-                    </b>
+                    <div class="w-[350px]">
+                        <b
+                            class="text-[12px] line-clamp-1"
+                            id="header-user-name"
+                        >
+                            {{ user.name }}
+                        </b>
+                        <p class="text-yellow text-[11px]">
+                            {{  roleUser[user.role as string] }}
+                        </p>
                     </div>
                     <img
                         :src="user.avatar"
@@ -49,7 +49,7 @@
                         >
                             <li>
                                 <Link
-                                    :href="route('account.index')"
+                                    href=""
                                     class="text-dark text-[12px] flex gap-2 items-center px-3 py-[7px] rounded-md hover:bg-[#E6E9EF] relative"
                                 >
                                     <i class="isax-b icon-user text-[15px]"></i>
@@ -83,15 +83,20 @@
 
 <script setup lang="ts">
 import Confirmation from "@/Components/Popup/Confirmation.vue";
-import DropdownNotification from "./DropdownNotification.vue";
 import AppLogoSm from "@/Components/Icon/Logo/AppLogoSm.vue";
 import { Link, router, usePage } from "@inertiajs/vue3";
 import { leaveConnectionBroadcast } from "@/socket";
 
 const user = usePage().props.auth?.user;
-
+const roleUser: any = {
+    ba: "Business Account - Superadmin",
+    admin: "Business Account - Admin",
+    spv: "Supervisor",
+    am: "AM",
+    spv_escalation: "Escalation SPV",
+};
 const logout = () => {
-    leaveConnectionBroadcast()
+    leaveConnectionBroadcast();
     router.get(route("auth.logout"));
 };
 </script>
