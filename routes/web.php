@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Auth\AuthLoginController;
 use App\Http\Controllers\Dashboard\DashboardController;
+use App\Http\Controllers\Dashboard\InboundDashboardController;
+use App\Http\Controllers\Dashboard\OutboundDashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -31,6 +33,7 @@ Route::middleware(['me-auth', 'idle-logout'])
      ->group(function () {
           Route::get('/logout', [AuthLoginController::class, 'logout'])->name('auth.logout');
 
-          Route::get("/", [DashboardController::class, "index"])->name("index");
-          
+          Route::get("/inbound/{type}", [InboundDashboardController::class, "index"])->name("dashboard.inbound.index")->whereIn('type', ['live-daily', 'kpi']);
+          Route::get("/outbound/{type}", [OutboundDashboardController::class, "index"])->name("dashboard.outbound.index")->whereIn('type', ['marketing-campaign', 'product']);
+
      });

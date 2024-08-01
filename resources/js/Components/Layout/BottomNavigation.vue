@@ -1,6 +1,6 @@
 <template>
     <nav class="md:hidden bg-white w-full border-t px-3 py-2 overflow-auto bottom-navigation fixed bottom-0">
-        <ul class="text-[12px] font-krub-medium menu-list flex justify-between gap-2">
+        <ul class="text-[12px] font-krub-medium menu-list flex  gap-10 items-center justify-center">
             <li
                 x-data="{ id: $id('accordion') }"
                 v-for="menu in menus"

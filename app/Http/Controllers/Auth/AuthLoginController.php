@@ -15,7 +15,7 @@ class AuthLoginController extends Controller
     public function index(Request $request)
     {
         if(user()){
-            return to_route('ticket.index');
+            return to_route('dashboard.inbound.index');
         }
         return Inertia::render("Auth/Login");
     }
@@ -25,7 +25,7 @@ class AuthLoginController extends Controller
         try {
             $loginAction->execute($request);
 
-            return to_route('index');
+            return to_route('dashboard.inbound.index',"live-daily");
         } catch (BadRequestException $e) {
             return back()->with(['error' => $e->getMessage()]);
         }
