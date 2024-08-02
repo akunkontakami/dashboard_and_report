@@ -22,7 +22,7 @@
                     />
                     <CardKpi
                         value="0"
-                        label="CLosed"
+                        label="Closed"
                         textClass="text-[#00CA4E]"
                     />
                 </div>

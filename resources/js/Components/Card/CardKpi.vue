@@ -6,7 +6,7 @@
           >
                {{ value }}
           </h1>
-          <p class="text-[13px] font-krub-semibold">
+          <p class="text-[12px] font-krub-semibold">
                {{ label }}
           </p>
     </div>
