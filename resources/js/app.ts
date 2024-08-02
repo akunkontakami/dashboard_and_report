@@ -6,6 +6,7 @@ import { createApp, h, DefineComponent } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue,route } from '../../vendor/tightenco/ziggy/dist';
+import { Ziggy } from "./ziggy"
 
 const appName = "Dashboard Report"
 window.route = (name?: string, params?: any , absolute?: boolean) => route(name, params, absolute, Ziggy)
@@ -20,7 +21,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(ZiggyVue)
+            .use(ZiggyVue,Ziggy)
             .mount(el);
     },
     progress: {
