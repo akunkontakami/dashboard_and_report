@@ -15,7 +15,7 @@ class AuthLoginController extends Controller
     public function index(Request $request)
     {
         if(user()){
-            return to_route('dashboard.inbound.index');
+            return to_route('dashboard.inbound.index',"live-daily");
         }
         return Inertia::render("Auth/Login");
     }
