@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+Route::redirect("/","dashboard/inbound/live-daily");
 /**
  * Authentication Route
  */
