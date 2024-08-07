@@ -1,31 +1,12 @@
 <template>
     <section>
         <ul class="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 gap-2">
-            <li>
-                <CardLiveDaily title="New" value="40" :yesterday="-5" />
-            </li>
-            <li>
-                <CardLiveDaily
-                    title="Unassigned Enquiry"
-                    value="20"
-                    :yesterday="-4"
+            <li v-for="card in cardLiveDaily">
+                <CardLiveDaily 
+                    :title="card.label" 
+                    :today="card.today" 
+                    :yesterday="card.yesterday" 
                 />
-            </li>
-            <li>
-                <CardLiveDaily
-                    title="Unassigned Ticket"
-                    value="70"
-                    :yesterday="20"
-                />
-            </li>
-            <li>
-                <CardLiveDaily title="Open" value="99" :yesterday="15" />
-            </li>
-            <li>
-                <CardLiveDaily title="Solved" value="0" :yesterday="0" />
-            </li>
-            <li>
-                <CardLiveDaily title="Escalated" value="63" :yesterday="-10" />
             </li>
         </ul>
 
@@ -40,13 +21,15 @@
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     First Response Time (FRT) Last 7 days
                 </h1>
-                <div class="bg-white border rounded-lg px-3 py-2 h-[200px]">
-                </div>
+                <div
+                    class="bg-white border rounded-lg px-3 py-2 h-[200px]"
+                ></div>
                 <h1 class="font-krub-bold text-[13px] mb-1 mt-3">
                     First Resolution Time Last 7 days
                 </h1>
-                <div class="bg-white border rounded-lg px-3 py-2 h-[200px]">
-                </div>
+                <div
+                    class="bg-white border rounded-lg px-3 py-2 h-[200px]"
+                ></div>
             </div>
         </div>
     </section>
@@ -54,4 +37,19 @@
 <script setup lang="ts">
 import CardLiveDaily from "@/Components/Card/CardLiveDaily.vue";
 import InboundTicketSolverBtAgent from "@/Components/Chart/InboundTicketSolverBtAgent.vue";
+import axios from "axios";
+import { ref, onMounted } from "vue";
+
+const cardLiveDaily : any = ref([])
+const fetchLiveDailyCard = () => {
+    axios
+        .get(route("dashboard.inbound.data.live-daily.card"))
+        .then((result) => {
+            cardLiveDaily.value = result.data
+        });
+};
+
+onMounted(() => {
+    fetchLiveDailyCard();
+});
 </script>

@@ -29,7 +29,7 @@ Route::middleware(['me-auth', 'idle-logout'])
 
 
           Route::controller(InboundDashboardController::class)
-               ->as('dashboard.inbound.data')
+               ->as('dashboard.inbound.data.')
                ->prefix("dashboard/inbound")
                ->group(function () {
                     Route::get('live-daily/card', 'liveDailyCard')->name('live-daily.card');

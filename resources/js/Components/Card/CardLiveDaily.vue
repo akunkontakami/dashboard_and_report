@@ -4,7 +4,7 @@
             {{ title }}
         </h1>
         <h1 class="border-b text-center py-2 text-3xl font-krub-bold">
-            {{ value }}
+            {{ today }}
         </h1>
         <div class="flex flex-col justify-center items-center py-2">
             <p class="text-[11px] text-[#404040] font-krub-semibold">
@@ -23,5 +23,5 @@
     </div>
 </template>
 <script setup lang="ts">
-defineProps(["title", "value", "yesterday"]);
+defineProps(["title", "today", "yesterday"]);
 </script>

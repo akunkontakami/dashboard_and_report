@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Service\Ticket\TicketService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class InboundDashboardController extends Controller
@@ -18,13 +19,19 @@ class InboundDashboardController extends Controller
 
     public function liveDailyCard(Request $request, TicketService $ticketService)
     {
+        $currentDate = Carbon::parse("2024-08-01"); // Todo : change to now
         $user = user();
         $companyId = $user->company_id;
-        $today = date('Y-m-d');
-        $yesterday = now()->subDays(1)->format('Y-m-d');
-        
-        
-        $new = $ticketService->findNewTicketByDate($user, $today, $yesterday);
+        $today = $currentDate->clone()->format('Y-m-d');
+        $yesterday = $currentDate->subDays(1)->format('Y-m-d');
+
+
+        $new = $ticketService->findNewTicketByDate($user, $today, $yesterday, 'inbound');
+        $unassignedEnquire = $ticketService->findUnassignedEnquiryTicketByDate($user,$today,$yesterday,'inbound');
+        $unassignedTicket = $ticketService->findUnassignedTicketByDate($user,$today,$yesterday,'inbound');
+        $open = $ticketService->findOpenTicketByDate($user, $today, $yesterday, 'inbound');
+        $solved = $ticketService->findSolvedTicketByDate($user, $today, $yesterday, 'inbound');
+        $escaalted = $ticketService->findEscalatedTicketByDate($user, $today, $yesterday, 'inbound');
 
         return [
             [
@@ -33,28 +40,23 @@ class InboundDashboardController extends Controller
             ],
             [
                 "label" => "Unassigned Enquiry",
-                "today" => 30,
-                "yesterday" => -5
+                ...$unassignedEnquire
             ],
             [
                 "label" => "Unassigned Ticket",
-                "today" => 30,
-                "yesterday" => -5
+                ...$unassignedTicket
             ],
             [
                 "label" => "Open",
-                "today" => 30,
-                "yesterday" => -5
+                ...$open
             ],
             [
                 "label" => "Solved",
-                "today" => 30,
-                "yesterday" => -5
+                ...$solved
             ],
             [
                 "label" => "Escalated",
-                "today" => 30,
-                "yesterday" => -5
+                ...$escaalted
             ]
         ];
     }
