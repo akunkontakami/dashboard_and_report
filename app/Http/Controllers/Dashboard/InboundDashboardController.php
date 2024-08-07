@@ -63,7 +63,7 @@ class InboundDashboardController extends Controller
 
     public function liveDailyTicketSolved(Request $request, DashboardTicketService $dashboardTicketService)
     {
-        $currentDate = Carbon::parse("2024-07-25"); // Todo : change to now
+        $currentDate = now(); // Todo : change to now
         $user = user();
         return $dashboardTicketService->findTopTenSolvedClosedTicketAgent($user, $currentDate->format('Y-m-d'), "inbound");
     }

@@ -213,7 +213,7 @@ class DashboardTicketService
 
           $items = $result->toArray();
           $totalData = $result->count();
-          if ($totalData < 10) {
+          if ($totalData < 10 && $totalData) {
                $appends = collect(range(1, 10 - $totalData))->map(fn($row)=>[
                     'current_agent_id' => null,
                     'name' => "#",

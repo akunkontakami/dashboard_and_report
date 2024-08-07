@@ -5,16 +5,22 @@
             :height="400"
             :options="chart.options"
             :series="chart.series"
-            v-if="chart"
+            v-if="chart && haveData"
         ></VueApexCharts>
+        <div v-if="!haveData" class="flex flex-col justify-center items-center py-3">
+            <EmptyState class="w-[100px] h-[100px]"/>
+            <span class="text-[12px] mt-3 block">No Data Found</span>
+        </div>
     </div>
 </template>
 <script setup lang="ts">
 import VueApexCharts from "vue3-apexcharts";
 import axios from "axios";
+import EmptyState from "../Icon/Etc/EmptyState.vue";
 import { ref, onMounted } from "vue";
 
 const loading = ref(true);
+const haveData = ref(false)
 const chart: any = ref(null);
 const chartConfig = {
     options: {
@@ -39,7 +45,7 @@ const chartConfig = {
                 fontWeight: "bold",
                 color: "black",
             },
-            offsetX: 40,
+            offsetX: 20,
             background: {
                 enabled: true,
                 foreColor: "#000",
@@ -48,7 +54,7 @@ const chartConfig = {
             },
         },
         xaxis: {
-            categories: [],
+            categories: ['#','#','#','#','#','#','#','#','#','#'],
             show: false,
             labels: {
                 show: false,
@@ -77,7 +83,7 @@ const chartConfig = {
     series: [
         {
             name: "Total",
-            data: [],
+            data: [0,0,0,0,0,0,0,0,0,0],
         },
     ],
 };
@@ -94,6 +100,9 @@ const fetchLiveDailyCard = () => {
             };
             chartConfig.options.xaxis.categories = items.map((row:any)=>row.name)
             chart.value = chartConfig
+            if(items.length){
+                haveData.value = true
+            }
         });
 };
 
