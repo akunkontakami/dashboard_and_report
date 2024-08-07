@@ -3,35 +3,35 @@
 namespace App\Http\Controllers\Dashboard;
 
 use App\Http\Controllers\Controller;
-use App\Service\Ticket\TicketService;
+use App\Service\Ticket\DashboardTicketService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class InboundDashboardController extends Controller
 {
-    public function index(Request $request, TicketService $ticketService, $type)
+    public function index(Request $request, DashboardTicketService $dashboardTicketService, $type)
     {
         return Inertia::render("Dashboard/Inbound/Index", [
             "type" => $type
         ]);
     }
 
-    public function liveDailyCard(Request $request, TicketService $ticketService)
+    public function liveDailyCard(Request $request, DashboardTicketService $dashboardTicketService)
     {
-        $currentDate = Carbon::parse("2024-08-01"); // Todo : change to now
+        $currentDate = now();
         $user = user();
         $companyId = $user->company_id;
         $today = $currentDate->clone()->format('Y-m-d');
         $yesterday = $currentDate->subDays(1)->format('Y-m-d');
 
 
-        $new = $ticketService->findNewTicketByDate($user, $today, $yesterday, 'inbound');
-        $unassignedEnquire = $ticketService->findUnassignedEnquiryTicketByDate($user,$today,$yesterday,'inbound');
-        $unassignedTicket = $ticketService->findUnassignedTicketByDate($user,$today,$yesterday,'inbound');
-        $open = $ticketService->findOpenTicketByDate($user, $today, $yesterday, 'inbound');
-        $solved = $ticketService->findSolvedTicketByDate($user, $today, $yesterday, 'inbound');
-        $escaalted = $ticketService->findEscalatedTicketByDate($user, $today, $yesterday, 'inbound');
+        $new = $dashboardTicketService->findNewTicketByDate($user, $today, $yesterday, 'inbound');
+        $unassignedEnquire = $dashboardTicketService->findUnassignedEnquiryTicketByDate($user, $today, $yesterday, 'inbound');
+        $unassignedTicket = $dashboardTicketService->findUnassignedTicketByDate($user, $today, $yesterday, 'inbound');
+        $open = $dashboardTicketService->findOpenTicketByDate($user, $today, $yesterday, 'inbound');
+        $solved = $dashboardTicketService->findSolvedTicketByDate($user, $today, $yesterday, 'inbound');
+        $escaalted = $dashboardTicketService->findEscalatedTicketByDate($user, $today, $yesterday, 'inbound');
 
         return [
             [
@@ -61,9 +61,11 @@ class InboundDashboardController extends Controller
         ];
     }
 
-    public function liveDailyTicketSolved(Request $request)
+    public function liveDailyTicketSolved(Request $request, DashboardTicketService $dashboardTicketService)
     {
-        return [];
+        $currentDate = Carbon::parse("2024-07-25"); // Todo : change to now
+        $user = user();
+        return $dashboardTicketService->findTopTenSolvedClosedTicketAgent($user, $currentDate->format('Y-m-d'), "inbound");
     }
 
     public function liveDailyFirstResponseTime(Request $request)

@@ -4,7 +4,7 @@ namespace App\Service\Ticket;
 use App\Models\Ticket\Ticket;
 use Illuminate\Support\Facades\DB;
 
-class TicketService
+class DashboardTicketService
 {
      public function __construct(
           private $model = Ticket::class
@@ -75,7 +75,7 @@ class TicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          $sourceTicket = ['From Whatsapp Bot','From Web Bot'];
+          $sourceTicket = ['From Whatsapp Bot', 'From Web Bot'];
           $result = $this->model::query()
                ->select([
                     'tickets.id',
@@ -177,5 +177,53 @@ class TicketService
                'today' => $today,
                'yesterday' => $today - $yesterday
           ];
+     }
+
+     public function findTopTenSolvedClosedTicketAgent($user, $date, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result = $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->join("company_users", function ($join) {
+                    $join->on("company_users.company_id", "tickets.company_id");
+                    $join->on("company_users.user_id", "tickets.current_agent_id");
+               })
+               ->select([
+                    'tickets.current_agent_id',
+                    'company_users.name',
+                    DB::raw("count(tickets.id) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw('date(tickets.created_at) = ?', $date)
+               ->where(function ($query) {
+                    $query->orWhereIn('st.status_category', ["Solved", "Closed"]);
+               })
+               ->groupBy(["tickets.current_agent_id", "company_users.name"])
+               ->orderBy("total", "desc")
+               ->take(10)
+               ->get();
+
+          $items = $result->toArray();
+          $totalData = $result->count();
+          if ($totalData < 10) {
+               $appends = collect(range(1, 10 - $totalData))->map(fn($row)=>[
+                    'current_agent_id' => null,
+                    'name' => "#",
+                    'total' => 0
+               ]);
+               $items = [
+                    ...$items,
+                    ...$appends
+               ];
+          }
+          return $items;
      }
 }
