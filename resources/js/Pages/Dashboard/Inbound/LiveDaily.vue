@@ -1,13 +1,7 @@
 <template>
     <section>
         <ul class="grid lg:grid-cols-6 md:grid-cols-3 grid-cols-2 gap-2">
-            <li v-for="card in cardLiveDaily">
-                <CardLiveDaily 
-                    :title="card.label" 
-                    :today="card.today" 
-                    :yesterday="card.yesterday" 
-                />
-            </li>
+            <CardLiveDaily />
         </ul>
 
         <div class="grid grid-cols-5 gap-2 mt-3">
@@ -39,17 +33,4 @@ import CardLiveDaily from "@/Components/Card/CardLiveDaily.vue";
 import InboundTicketSolverBtAgent from "@/Components/Chart/InboundTicketSolverBtAgent.vue";
 import axios from "axios";
 import { ref, onMounted } from "vue";
-
-const cardLiveDaily : any = ref([])
-const fetchLiveDailyCard = () => {
-    axios
-        .get(route("dashboard.inbound.data.live-daily.card"))
-        .then((result) => {
-            cardLiveDaily.value = result.data
-        });
-};
-
-onMounted(() => {
-    fetchLiveDailyCard();
-});
 </script>
