@@ -366,4 +366,25 @@ class DashboardTicketService
           });
      }
 
+     public function findAllTicketCategoryBySource($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return $this->model::query()
+               ->select([
+                    'tickets.source',
+                    'tickets.call_id',
+                    'tickets.chat_id',
+                    DB::raw("count(distinct tickets.id) as total_ticket")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("tickets.source,tickets.call_id,tickets.chat_id")
+               ->get();
+     }
+
 }

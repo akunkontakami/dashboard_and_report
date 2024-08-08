@@ -39,12 +39,7 @@
             </div>
         </div>
         <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-2 mt-3">
-            <CardPieChannel
-                label="Ticket by Channel"
-                :badges="ticketChannelBadges"
-            >
-                <div class="bg-[#ddd] w-[120px] h-[120px] rounded-full"></div>
-            </CardPieChannel>
+            <ChartPieTicketAllChannel :period="period"/>
             <CardPieChannel label="Voice PSTN" :badges="voicePstnBadges">
                 <div class="bg-[#ddd] w-[120px] h-[120px] rounded-full"></div>
             </CardPieChannel>
@@ -69,20 +64,11 @@ import CardPieChannel from "@/Components/Chart/Inbound/CardPieChannel.vue";
 import CardKpiTicketStatus from "@/Components/Card/Inbound/CardKpiTicketStatus.vue";
 import InboundKpiDailyActivityChart from "@/Components/Chart/Inbound/InboundKpiDailyActivityChart.vue";
 import InboundKpiSlaChart from "@/Components/Chart/Inbound/InboundKpiSlaChart.vue";
+import ChartPieTicketAllChannel from "@/Components/Chart/Inbound/ChartPieTicketAllChannel.vue";
 import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
 import { ref } from "vue";
 
 const period = ref("today");
-const ticketChannelBadges = ref([
-    ["bg-[#2D9CDB]", "Web Call"],
-    ["bg-[#F8961E]", "Web Chat"],
-    ["bg-[#F9C74F]", "Web BOT"],
-    ["bg-[#90BE6D]", "Whatsapp"],
-    ["bg-[#F3722C]", "Whatsapp Bot"],
-    ["bg-[#7A7E80]", "Email"],
-    ["bg-[#E99C00]", "Instagram"],
-    ["bg-[#E4BEBE]", "Facebook"],
-]);
 const voicePstnBadges = ref([
     ["bg-[#FF605C]", "Abandoned call"],
     ["bg-[#F3722C]", "Missed Call"],

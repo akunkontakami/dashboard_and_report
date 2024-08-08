@@ -15,7 +15,7 @@
                     >
                         <span
                             class="block w-[10px] h-[10px] rounded-sm"
-                            v-bind:class="badge[0]"
+                            :style="`background-color:${badge[0]}`"
                         ></span>
                         <span>{{ badge[1] }}</span>
                     </li>
