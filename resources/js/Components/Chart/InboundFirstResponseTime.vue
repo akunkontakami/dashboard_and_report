@@ -2,14 +2,14 @@
     <div class="bg-white border rounded-lg pt-3 pr-3">
         <VueApexCharts
             type="bar"
-            :height="250"
+            :height="200"
             :options="chart.options"
             :series="chart.series"
             v-if="chart && haveData"
         ></VueApexCharts>
         <div
             v-if="!haveData"
-            class="flex flex-col justify-center items-center py-3 min-h-[265px]"
+            class="flex flex-col justify-center items-center py-3 min-h-[205px]"
         >
             <EmptyState class="w-[100px] h-[100px]" />
             <span class="text-[12px] mt-3 block">No Data Found</span>

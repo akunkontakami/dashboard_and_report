@@ -16,12 +16,11 @@
                     First Response Time (FRT) Last 7 days
                 </h1>
                 <InboundFirstResponseTime />
+                
                 <h1 class="font-krub-bold text-[13px] mb-1 mt-3">
                     First Resolution Time Last 7 days
                 </h1>
-                <div
-                    class="bg-white border rounded-lg px-3 py-2 h-[200px]"
-                ></div>
+                <InboundFirstResolutionTime />
             </div>
         </div>
     </section>
@@ -30,6 +29,5 @@
 import CardLiveDaily from "@/Components/Card/CardLiveDaily.vue";
 import InboundTicketSolvedByAgent from "@/Components/Chart/InboundTicketSolvedByAgent.vue";
 import InboundFirstResponseTime from "@/Components/Chart/InboundFirstResponseTime.vue";
-import axios from "axios";
-import { ref, onMounted } from "vue";
+import InboundFirstResolutionTime from "@/Components/Chart/InboundFirstResolutionTime.vue";
 </script>

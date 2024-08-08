@@ -266,4 +266,43 @@ class DashboardTicketService
                ];
           });
      }
+
+     public function findAllFirstResolutionTime($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result = $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->selectRaw("
+                    date(created_at) date,
+                    count(tickets.id) as total_ticket,
+                    sum(case when st.status_category='Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed  
+               ")
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("date(created_at)")
+               ->get();
+          return collect($dates)->map(function ($date) use ($result) {
+               $frt = 0;
+               $ticket = $result->where('date', $date)->first();
+               if ($ticket) {
+                    $totalTicket = $ticket->total_ticket ;
+                    if($durationClosed = $ticket->duration_closed){
+                         $frt = round($durationClosed / $totalTicket);
+                    }
+               }
+               return [
+                    'date' => date('d-m-Y', strtotime($date)),
+                    'frt' => $frt,
+                    'label' => Yellow::minuteToSla($frt)
+               ];
+          });
+     }
 }
