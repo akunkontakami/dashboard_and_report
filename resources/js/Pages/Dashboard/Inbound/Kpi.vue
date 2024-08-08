@@ -10,34 +10,17 @@
                     class="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2 list-none"
                 >
                     <CardKpiTicketStatus :period="period"/>
-                    <!-- <CardKpi value="0" label="New" textClass="text-[#FF605C]" />
-                    <CardKpi
-                        value="0"
-                        label="Open"
-                        textClass="text-[#FFBD44]"
-                    />
-                    <CardKpi
-                        value="0"
-                        label="Solved"
-                        textClass="text-[#26C0F1]"
-                    />
-                    <CardKpi
-                        value="0"
-                        label="Closed"
-                        textClass="text-[#00CA4E]"
-                    /> -->
                 </ul>
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     First Response Time & First Resolution Time
                 </h1>
-                <div
-                    class="grid lg:grid-cols-2 sm:grid-cols-2 grid-cols-1 gap-2"
+                <ul
+                    class="grid lg:grid-cols-2 sm:grid-cols-2 grid-cols-1 gap-2 list-none"
                 >
-                    <CardKpi value="0" label="average first response time" />
-                    <CardKpi value="0" label="average first resolution time" />
-                </div>
+                    <CardKpiSlaTime :period="period"/>
+                </ul>
             </div>
         </div>
 
@@ -83,9 +66,9 @@
 </template>
 <script setup lang="ts">
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
-import CardKpi from "@/Components/Card/CardKpi.vue";
 import CardPieChannel from "@/Components/Card/CardPieChannel.vue";
 import CardKpiTicketStatus from "@/Components/Card/CardKpiTicketStatus.vue";
+import CardKpiSlaTime from "@/Components/Card/CardKpiSlaTime.vue";
 import { ref } from "vue";
 
 const period = ref("today");

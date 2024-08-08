@@ -30,8 +30,8 @@ class Yellow
           try {
                $hours = floor($minutes / 60);
                $minutes = $minutes - ($hours * 60);
-               $hours = str_pad($hours, 2, STR_PAD_LEFT);
-               $minutes = str_pad($minutes, 2, STR_PAD_LEFT);
+               $hours = str_pad($hours, 2, "0",STR_PAD_LEFT);
+               $minutes = str_pad($minutes, 2, "0",STR_PAD_LEFT);
                return "{$hours}h:{$minutes}min";
           } catch (\Exception $e) {
                return "00h:00min";
