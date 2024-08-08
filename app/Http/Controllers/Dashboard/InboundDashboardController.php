@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Dashboard;
 
+use App\Helpers\Yellow;
 use App\Http\Controllers\Controller;
 use App\Service\Ticket\DashboardTicketService;
+use App\Service\Utility\UtilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
@@ -21,7 +23,6 @@ class InboundDashboardController extends Controller
     {
         $currentDate = now();
         $user = user();
-        $companyId = $user->company_id;
         $today = $currentDate->clone()->format('Y-m-d');
         $yesterday = $currentDate->subDays(1)->format('Y-m-d');
 
@@ -63,14 +64,19 @@ class InboundDashboardController extends Controller
 
     public function liveDailyTicketSolved(Request $request, DashboardTicketService $dashboardTicketService)
     {
-        $currentDate = now(); // Todo : change to now
+        $currentDate = now();
         $user = user();
         return $dashboardTicketService->findTopTenSolvedClosedTicketAgent($user, $currentDate->format('Y-m-d'), "inbound");
     }
 
-    public function liveDailyFirstResponseTime(Request $request)
+    public function liveDailyFirstResponseTime(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
     {
-        return [];
+        $user = user();
+        $todayDate = Carbon::parse("2024-07-25");
+        $dates = Yellow::createRangeInterval($todayDate, -7);
+        $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+        $tickets = $dashboardTicketService->findAllFirstResponseTime($user, $dates,$totalResponseSlaTime, 'inbound');
+        return $tickets;
     }
 
     public function liveDailyFirstResolutionTime(Request $request)

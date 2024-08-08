@@ -1,6 +1,7 @@
 <?php
 namespace App\Service\Ticket;
 
+use App\Helpers\Yellow;
 use App\Models\Ticket\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -214,7 +215,7 @@ class DashboardTicketService
           $items = $result->toArray();
           $totalData = $result->count();
           if ($totalData < 10 && $totalData) {
-               $appends = collect(range(1, 10 - $totalData))->map(fn($row)=>[
+               $appends = collect(range(1, 10 - $totalData))->map(fn($row) => [
                     'current_agent_id' => null,
                     'name' => "#",
                     'total' => 0
@@ -225,5 +226,44 @@ class DashboardTicketService
                ];
           }
           return $items;
+     }
+
+     public function findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result = $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->selectRaw("
+                    date(created_at) date,
+                    count(tickets.id) as total_ticket,
+                    sum(case when st.status_category='Closed' then 1 else 0 end) as total_closed 
+               ")
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("date(created_at)")
+               ->get();
+          return collect($dates)->map(function ($date) use ($result, $totalResponseSlaTime) {
+               $frt = 0;
+               $ticket = $result->where('date', $date)->first();
+               if ($ticket) {
+                    $totalTicket = $ticket->total_ticket * $totalResponseSlaTime;
+                    if($ticketClosed = $ticket->total_closed){
+                         $frt = round($totalTicket / $ticketClosed);
+                    }
+               }
+               return [
+                    'date' => date('d-m-Y', strtotime($date)),
+                    'frt' => $frt,
+                    'label' => Yellow::minuteToSla($frt)
+               ];
+          });
      }
 }
