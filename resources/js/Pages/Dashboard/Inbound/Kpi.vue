@@ -9,7 +9,7 @@
                 <ul
                     class="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2 list-none"
                 >
-                    <CardKpiTicketStatus :period="period"/>
+                    <CardKpiTicketStatus :period="period" />
                 </ul>
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3">
@@ -19,7 +19,7 @@
                 <ul
                     class="grid lg:grid-cols-2 sm:grid-cols-2 grid-cols-1 gap-2 list-none"
                 >
-                    <CardKpiSlaTime :period="period"/>
+                    <CardKpiSlaTime :period="period" />
                 </ul>
             </div>
         </div>
@@ -29,16 +29,15 @@
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Daily Ticket Activity
                 </h1>
-                <div class="bg-white rounded-xl px-3 py-2 border h-full min-h-[200px]">
-              
-                </div>
+                <InboundKpiDailyActivityChart :period="period"/>
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3 flex flex-col">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     First Response Time & First Resolution Time
                 </h1>
-                <div class="bg-white rounded-xl px-3 py-2 border h-full min-h-[200px]">
-                </div>
+                <div
+                    class="bg-white rounded-xl px-3 py-2 border h-full min-h-[200px]"
+                ></div>
             </div>
         </div>
         <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-2 mt-3">
@@ -59,16 +58,19 @@
             </CardPieChannel>
         </div>
         <div class="bg-white mt-3 px-3 py-2 rounded-xl border">
-            <h1 class="font-krub-bold text-[13px] mb-1 text-center">Ticket by Type</h1>
+            <h1 class="font-krub-bold text-[13px] mb-1 text-center">
+                Ticket by Type
+            </h1>
             <div class="h-[300px]"></div>
         </div>
     </section>
 </template>
 <script setup lang="ts">
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
-import CardPieChannel from "@/Components/Card/CardPieChannel.vue";
-import CardKpiTicketStatus from "@/Components/Card/CardKpiTicketStatus.vue";
-import CardKpiSlaTime from "@/Components/Card/CardKpiSlaTime.vue";
+import CardPieChannel from "@/Components/Chart/Inbound/CardPieChannel.vue";
+import CardKpiTicketStatus from "@/Components/Card/Inbound/CardKpiTicketStatus.vue";
+import InboundKpiDailyActivityChart from "@/Components/Chart/Inbound/InboundKpiDailyActivityChart.vue";
+import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
 import { ref } from "vue";
 
 const period = ref("today");
@@ -91,7 +93,6 @@ const csatBadges = ref([
     ["bg-[#90BE6D]", "Good"],
     ["bg-[#F94144]", "Bad"],
 ]);
-
 
 const updatePeriode = (value: string) => {
     period.value = value;

@@ -33,8 +33,8 @@
  <script setup lang="ts">
  import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
  import DropdownProduct from "@/Components/Dropdown/DropdownProduct.vue";
- import OutboundMarketingCampaignChart from "@/Components/Chart/OutboundMarketingCampaignChart.vue";
- import CardAgentDeal from "@/Components/Card/CardAgentDeal.vue";
+ import OutboundMarketingCampaignChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignChart.vue";
+ import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
  import { ref } from "vue";
  
  const period = ref("today");

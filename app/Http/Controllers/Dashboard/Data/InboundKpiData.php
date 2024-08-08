@@ -62,9 +62,12 @@ trait InboundKpiData
           ];
      }
 
-     public function kpiTicketActivity(Request $request)
+     public function kpiTicketActivity(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
      }
 
      public function kpiSlaChart(Request $request)

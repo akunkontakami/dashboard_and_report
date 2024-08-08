@@ -329,4 +329,41 @@ class DashboardTicketService
                ->get();
           return $result;
      }
+
+     public function findAllDailyTicketCategory($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result =  $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->selectRaw("
+                    date(created_at) date,
+                    sum(case when st.status_category='Closed' then 1 else 0 end) as closed,
+                    sum(case when st.status_category='New' then 1 else 0 end) as new,
+                    sum(case when st.status_category='Solved' then 1 else 0 end) as solved,
+                    sum(case when st.status_category='Open' then 1 else 0 end) as open
+               ")
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("date(created_at)")
+               ->get();
+          return collect($dates)->map(function ($date) use ($result) {
+               $ticket = $result->where('date', $date)->first();
+               return [
+                    'date' => date('d-m-Y', strtotime($date)),
+                    'new' => intval($ticket?->new ?: 0),
+                    'closed' => intval($ticket?->closed ?: 0),
+                    'solved' => intval($ticket?->solved ?: 0),
+                    'open' => intval($ticket?->open ?: 0),
+               ];
+          });
+     }
+
 }
