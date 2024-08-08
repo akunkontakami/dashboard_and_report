@@ -35,9 +35,7 @@
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     First Response Time & First Resolution Time
                 </h1>
-                <div
-                    class="bg-white rounded-xl px-3 py-2 border h-full min-h-[200px]"
-                ></div>
+                <InboundKpiSlaChart :period="period"/>
             </div>
         </div>
         <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-2 mt-3">
@@ -70,6 +68,7 @@ import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
 import CardPieChannel from "@/Components/Chart/Inbound/CardPieChannel.vue";
 import CardKpiTicketStatus from "@/Components/Card/Inbound/CardKpiTicketStatus.vue";
 import InboundKpiDailyActivityChart from "@/Components/Chart/Inbound/InboundKpiDailyActivityChart.vue";
+import InboundKpiSlaChart from "@/Components/Chart/Inbound/InboundKpiSlaChart.vue";
 import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
 import { ref } from "vue";
 

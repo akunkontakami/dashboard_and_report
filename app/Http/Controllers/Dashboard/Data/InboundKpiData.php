@@ -70,9 +70,30 @@ trait InboundKpiData
           return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
      }
 
-     public function kpiSlaChart(Request $request)
+     public function kpiSlaChart(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
      {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
 
+          $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          
+          $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
+          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, 'inbound');
+          return $responseTime->map(function ($response) use ($resolutionTime) {
+               $resolution = $resolutionTime->where('date', $response['date'])->first();
+               return [
+                    'date' => $response['date'],
+                    'response' => (object) [
+                         'value' => $response['frt'],
+                         'label' => $response['label'],
+                    ],
+                    'resolution' => (object) [
+                         'value' => $resolution['frt'],
+                         'label' => $resolution['label'],
+                    ]
+               ];
+          });
      }
 
      public function kpiTicketChannel(Request $request)
