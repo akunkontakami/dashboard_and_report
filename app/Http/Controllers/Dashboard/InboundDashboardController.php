@@ -64,7 +64,7 @@ class InboundDashboardController extends Controller
 
     public function liveDailyTicketSolved(Request $request, DashboardTicketService $dashboardTicketService)
     {
-        $currentDate = now();
+        $currentDate =  Carbon::parse("2024-07-25");
         $user = user();
         return $dashboardTicketService->findTopTenSolvedClosedTicketAgent($user, $currentDate->format('Y-m-d'), "inbound");
     }
@@ -72,19 +72,19 @@ class InboundDashboardController extends Controller
     public function liveDailyFirstResponseTime(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
     {
         $user = user();
-        $todayDate = now();
+        $todayDate = Carbon::parse("2024-07-25");
         $dates = Yellow::createRangeInterval($todayDate, -6); // to get only 7 day last
         $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-        $tickets = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
+        $tickets = $dashboardTicketService->findAllFirstResponseTime($user, $dates,$totalResponseSlaTime, 'inbound');
         return $tickets;
     }
 
-    public function liveDailyFirstResolutionTime(Request $request, DashboardTicketService $dashboardTicketService)
+    public function liveDailyFirstResolutionTime(Request $request,DashboardTicketService $dashboardTicketService)
     {
         $user = user();
-        $todayDate = now();
+        $todayDate = Carbon::parse("2024-07-25");
         $dates = Yellow::createRangeInterval($todayDate, -6); // to get only 7 day last
-        $tickets = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, 'inbound');
+        $tickets = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,'inbound');
         return $tickets;
     }
 }
