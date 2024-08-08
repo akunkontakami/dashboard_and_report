@@ -1,87 +1,53 @@
 <?php
 namespace App\Helpers;
 
+use DateInterval;
+use DatePeriod;
+use DateTime;
 use Illuminate\Support\Facades\Storage;
 
 class Yellow
 {
-
-     public static function createTicketNumber($type = null)
+     public static function createRangeInterval($start, $total)
      {
-          $prefix = 'PRO';
-          switch ($type) {
-               case 'outbound':
-                    $prefix = 'MCO';
-                    break;
-               case 'schedule':
-                    $prefix = 'SCH';
-                    break;
-               case 'general':
-                    $prefix = 'GEN';
-                    break;
+          $end = $start->clone()->addDays($total);
+          $startDate = $start > $end ? $end : $start;
+          $endDate = $end < $start ? $start : $end;
+
+          $dates = [];
+          $interval = new DateInterval('P1D');
+          $realEnd = new DateTime($endDate);
+          $realEnd->add($interval);
+          $period = new DatePeriod(new DateTime($startDate), $interval, $realEnd);
+          foreach ($period as $date) {
+               $dates[] = $date->format('Y-m-d');
           }
-          return $prefix . date('YmdHis') . rand(111, 999);
-     }
-     public static function phoneCountryCode()
-     {
-          return json_decode(file_get_contents(resource_path('assets/phone.json')), true);
+          return $dates;
      }
 
-     public static function uploadFile($file, $location = 'image')
+     public static function minuteToSla($minutes)
      {
-          if (config('app.env') === 'development') {
-               return Storage::disk('local')->put("uploads/{$location}", $file);
-          }
-          $path = Storage::disk('s3')->putFileAs('', $file,$file->getClientOriginalName());
-
-          return Storage::cloud()->url($path);
-     }
-
-     public static function deleteFile($url)
-     {
-          if ($url) {
-               if ((!str_contains($url, 'http://') || !str_contains($url, 'https://')) && Storage::exists($url)) {
-                    Storage::disk('local')->delete($url);
-               } else {
-                    $url = str_replace(config('filesystems.disks.s3.url'), '', $url);
-                    if (Storage::disk('s3')->exists($url)) {
-                         Storage::disk('s3')->delete($url);
-                    }
-               }
+          try {
+               $hours = floor($minutes / 60);
+               $minutes = $minutes - ($hours * 60);
+               $hours = str_pad($hours, 2, STR_PAD_LEFT);
+               $minutes = str_pad($minutes, 2, STR_PAD_LEFT);
+               return "{$hours}h:{$minutes}min";
+          } catch (\Exception $e) {
+               return "00h:00min";
           }
      }
 
-     public static function phoneNumber($phone, $prefix = '62')
+     public static function getDateRangeByPeriod($startDate, $periode)
      {
-          $start = substr($phone, 0, 1);
-          $prefix = str_replace('+', '', $prefix);
-          if ($start == '0') {
-               return $prefix . ltrim($phone, '0');
-          } else {
-               return $prefix . $phone;
-          }
-     }
-
-     public static function createUsername($name)
-     {
-          $name = substr(strtolower(str($name)->replace(' ', '_')), 0, 7);
-          $rand = rand(111, 999);
-
-          return $name . $rand;
-     }
-
-     public static function normalPhoneNumber($phone, $code)
-     {
-          return substr($phone, strlen($code));
-     }
-
-     public static function updateUserSession($replacement = [])
-     {
-          $sessionObject = [
-               ...(array) user(),
-               ...$replacement
+          // Periode List : today, last-7-days , last-30-days,
+          $periodeInterval = [
+               'today' => 0,
+               'last-7-days' => -6,
+               'last-30-days' => -29
           ];
 
-          session()->put(config('services.session-user-prefix'), (object) $sessionObject);
+          $periode = @$periodeInterval[$periode] ?: 'today';
+          return self::createRangeInterval($startDate, $periode);
      }
 }

@@ -29,12 +29,23 @@ Route::middleware(['me-auth', 'idle-logout'])
 
 
           Route::controller(InboundDashboardController::class)
-               ->as('dashboard.inbound.data')
+               ->as('dashboard.inbound.data.')
                ->prefix("dashboard/inbound")
                ->group(function () {
                     Route::get('live-daily/card', 'liveDailyCard')->name('live-daily.card');
                     Route::get('live-daily/ticket-solved', 'liveDailyTicketSolved')->name('live-daily.ticket-solved');
                     Route::get('live-daily/first-response-time', 'liveDailyFirstResponseTime')->name('live-daily.first-response-time');
                     Route::get('live-daily/first-resolution-time', 'liveDailyFirstResolutionTime')->name('live-daily.first-resolution-time');
+
+                    
+                    Route::get('kpi/ticket-status', 'kpiTicketStatus')->name('kpi.ticket-status');
+                    Route::get('kpi/sla-time', 'kpiSlaTime')->name('kpi.sla-time');
+                    Route::get('kpi/ticket-activity', 'kpiTicketActivity')->name('kpi.ticket-activity');
+                    Route::get('kpi/sla-chart', 'kpiSlaChart')->name('kpi.sla-chart');
+                    Route::get('kpi/ticket-channel', 'kpiTicketChannel')->name('kpi.ticket-channel');
+                    Route::get('kpi/voice-pstn', 'kpiVoicePstn')->name('kpi.voice-pstn');
+                    Route::get('kpi/web-call', 'kpiWebCall')->name('kpi.web-call');
+                    Route::get('kpi/csat', 'kpiCsat')->name('kpi.csat');
+                    Route::get('kpi/ticket-status/chart', 'kpiTicketStatusChart')->name('kpi.ticket-status/chart');
                });
      });

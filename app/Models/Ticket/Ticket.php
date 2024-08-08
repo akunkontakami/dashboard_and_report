@@ -22,5 +22,12 @@ class Ticket extends Model
         'is_read' => 'boolean'
     ];
 
+    public function scopeFilterByCompanyTypeDateRangeAndSource($query, $companyId, $type, $dates, $source = null)
+    {
+        $query->where('tickets.company_id', $companyId)
+            ->where('tickets.type', $type)
+            ->whereRaw('date(tickets.created_at) in (?,?)', $dates)
+            ->when($source, fn($query) => $query->whereIn('tickets.source', $source));
+    }
 
 }
