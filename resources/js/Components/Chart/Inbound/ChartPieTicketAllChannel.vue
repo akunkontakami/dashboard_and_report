@@ -165,11 +165,11 @@ const chartOptions = ref({
                             );
 
                             const labels = w.config.labels;
-                            var value = w.config.series[0];
                             if (
                                 labels.includes("Good") &&
                                 labels.includes("Bad")
                             ) {
+                                var value = w.config.series[0];
                                 value = `${value}%`;
                             }
                             return value;
