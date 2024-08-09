@@ -25,7 +25,7 @@
         >
             <EmptyState class="w-[100px] h-[100px]" v-if="!loading" />
             <span class="text-[12px] mt-3 block" v-if="!loading"
-                >No Data Found</span
+                >Data not found</span
             >
             <span class="text-[12px] mt-3 block" v-if="loading"
                 >Loading ...</span

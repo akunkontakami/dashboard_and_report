@@ -436,7 +436,7 @@ class DashboardTicketService
           
           $goodRating = $csat->whereIn('rating',[4,5])->sum('total');
           $badRating = $csat->whereIn('rating',[1,2,3])->sum('total');
-          $allRating = $csat->sum('total');
+          $allRating = $csat->where('rating','!=',0)->sum('total');
           if($allRating > 0){
                $goodRating = $goodRating  / $allRating * 100;
                $badRating = $badRating  / $allRating * 100;

@@ -19,7 +19,7 @@
                     class="flex flex-col justify-center items-center"
                 >
                     <EmptyState class="w-[100px] h-[100px]" />
-                    <span class="text-[11px] mt-3 block"> No Data Found </span>
+                    <span class="text-[11px] mt-3 block"> Data not found </span>
                 </div>
                 <div v-else>
                     <slot />
