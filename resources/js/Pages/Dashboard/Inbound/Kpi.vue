@@ -45,13 +45,13 @@
             <h1 class="font-krub-bold text-[13px] mb-1 text-center">
                 Ticket by Type
             </h1>
-            <div class="h-[300px]"></div>
+            <InboundKpiTicketByType :period="period"/>
         </div>
     </section>
 </template>
 <script setup lang="ts">
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
-import CardPieChannel from "@/Components/Chart/Inbound/CardPieChannel.vue";
+import InboundKpiTicketByType from "@/Components/Chart/Inbound/InboundKpiTicketByType.vue";
 import CardKpiTicketStatus from "@/Components/Card/Inbound/CardKpiTicketStatus.vue";
 import InboundKpiDailyActivityChart from "@/Components/Chart/Inbound/InboundKpiDailyActivityChart.vue";
 import InboundKpiSlaChart from "@/Components/Chart/Inbound/InboundKpiSlaChart.vue";

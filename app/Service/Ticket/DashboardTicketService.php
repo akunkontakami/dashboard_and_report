@@ -448,4 +448,29 @@ class DashboardTicketService
           ];
      }
 
+     public function findAllTicketBtStatusCategory($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return  $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->select([
+                    'tickets.status',
+                    'st.status_category',
+                    DB::raw("count(tickets.status) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("tickets.status,st.status_category")
+               ->orderByRaw("count(tickets.status) desc")
+               ->get();
+     }
+
 }

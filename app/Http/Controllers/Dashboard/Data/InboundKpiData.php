@@ -172,7 +172,7 @@ trait InboundKpiData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $missedCall =  $dashboardTicketService->findAllMissedCall($user,$dates);
+          $missedCall = $dashboardTicketService->findAllMissedCall($user, $dates);
           return [$missedCall];
      }
 
@@ -181,11 +181,25 @@ trait InboundKpiData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $csat =  $dashboardTicketService->findAllCsatRating($user,$dates);
-          return $csat;
+          return $dashboardTicketService->findAllCsatRating($user, $dates);
      }
-     public function kpiTicketStatusChart(Request $request)
+     public function kpiTicketStatusChart(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
+          $colors  = [
+               "New" => "#FF605C",
+               "Open" => "#FFBD44",
+               "Solved" => "#26C0F1",
+               "Closed" => "#00CA4E"
+          ];
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          return $dashboardTicketService->findAllTicketBtStatusCategory($user, $dates, 'inbound')->map(function($row) use($colors){
+               $color = @$colors[$row->status_category] ?: '#FF605C';
+               return [
+                    ...$row->toArray(),
+                    'color' => $color,
+               ];
+          });
      }
 }

@@ -46,6 +46,6 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('kpi/voice-pstn', 'kpiVoicePstn')->name('kpi.voice-pstn');
                     Route::get('kpi/web-call', 'kpiWebCall')->name('kpi.web-call');
                     Route::get('kpi/csat', 'kpiCsat')->name('kpi.csat');
-                    Route::get('kpi/ticket-status/chart', 'kpiTicketStatusChart')->name('kpi.ticket-status/chart');
+                    Route::get('kpi/ticket-status/chart', 'kpiTicketStatusChart')->name('kpi.ticket-status.chart');
                });
      });

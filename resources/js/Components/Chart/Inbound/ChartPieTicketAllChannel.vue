@@ -126,7 +126,7 @@ const chartOptions = ref({
             return value;
         },
         style: {
-            fontSize: "11px",
+            fontSize: "7px",
             fontFamily: "Helvetica, Arial, sans-serif",
             fontWeight: "normal",
         },
@@ -180,9 +180,9 @@ const chartOptions = ref({
                         offsetY: -8,
                         fontFamily: "Helvetica, Arial, sans-serif",
                         fontWeight: "bold",
-                        formatter: function (val: any,opt:any) {
+                        formatter: function (val: any, opt: any) {
                             const labels = opt.config.labels;
-                            var value = val
+                            var value = val;
                             if (
                                 labels.includes("Good") &&
                                 labels.includes("Bad")
