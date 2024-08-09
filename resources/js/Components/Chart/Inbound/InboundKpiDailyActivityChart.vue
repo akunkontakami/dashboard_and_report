@@ -2,7 +2,7 @@
     <div class="bg-white border rounded-lg pt-3 pr-3">
         <VueApexCharts
             type="bar"
-            :height="200"
+            :height="300"
             :options="chart.options"
             :series="chart.series"
             v-if="chart && !loading"
@@ -18,54 +18,49 @@
 <script setup lang="ts">
 import VueApexCharts from "vue3-apexcharts";
 import axios from "axios";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 
+const props = defineProps(["period"]);
 const loading = ref(true);
 const chart: any = ref(null);
 const chartConfig = {
     options: {
         chart: {
             type: "bar",
+            stacked: true,
         },
         plotOptions: {
             bar: {
                 borderRadius: 4,
                 borderRadiusApplication: "end",
                 dataLabels: {
-                    position: "top",
+                    position: "center",
                 },
             },
         },
         dataLabels: {
             enabled: true,
+            textAnchor: "middle",
             style: {
                 fontSize: "10px",
                 fontFamily: "Helvetica, Arial, sans-serif",
                 fontWeight: "normal",
                 color: "black",
             },
-            offsetY: -20,
-            background: {
-                enabled: true,
-                foreColor: "#000",
-                borderColor: "#fff",
-                opacity: 0.9,
-            },
-            formatter: function (val: any, opts: any) {
-                const label = opts.config.series[0].label;
-                return label[opts.dataPointIndex];
-            },
         },
         xaxis: {
-            categories: ['#','#','#','#','#','#','#'],
+            categories: ["#", "#", "#", "#", "#", "#", "#"],
             labels: {
                 show: true,
                 style: {
-                    fontSize: "10px",
+                    fontSize: "9px",
                     fontFamily: "Helvetica, Arial, sans-serif",
                     fontWeight: "bold",
                     color: "black",
                 },
+            },
+            axisTicks: {
+                show: false,
             },
         },
         yaxis: {
@@ -81,36 +76,59 @@ const chartConfig = {
             },
         },
         fill: {
-            colors: ["#76B958"],
+            colors: ["#FF605C", "#FFBD44", "#26C0F1", "#00CA95"],
+        },
+        legend: {
+            position: "top",
         },
         tooltip: {
-            y: {
-                formatter: function (value: any, series: any) {
-                    const label = chartConfig.series[0].label;
-                    return label[series.dataPointIndex];
-                },
+            shared: true,
+            intersect: false,
+            style: {
+                fontSize: "10px",
+                fontFamily: "Helvetica, Arial, sans-serif",
             },
+            followCursor: true,
         },
     },
     series: [
         {
             name: "Total",
+            color: "black",
             data: [0, 0, 0, 0, 0, 0, 0],
-            label: ['#','#','#','#','#','#','#'],
         },
     ],
 };
-const fetchLiveDailyCard = () => {
+const fetchData = () => {
     loading.value = true;
     axios
-        .get(route("dashboard.inbound.data.live-daily.first-response-time"))
+        .get(
+            route("dashboard.inbound.data.kpi.ticket-activity", {
+                periode: props.period,
+            })
+        )
         .then((result) => {
-            const items = result.data;
             loading.value = false;
+            const items = result.data;
             chartConfig.series[0] = {
-                name: "Total",
-                data: items.map((row: any) => row.frt),
-                label: items.map((row: any) => row.label),
+                name: "New",
+                color: "#FF605C",
+                data: items.map((row: any) => row.new),
+            };
+            chartConfig.series[1] = {
+                name: "Open",
+                color: "#FFBD44",
+                data: items.map((row: any) => row.open),
+            };
+            chartConfig.series[2] = {
+                name: "Solved",
+                color: "#26C0F1",
+                data: items.map((row: any) => row.solved),
+            };
+            chartConfig.series[3] = {
+                name: "Closed",
+                color: "#00CA95",
+                data: items.map((row: any) => row.closed),
             };
             chartConfig.options.xaxis.categories = items.map(
                 (row: any) => row.date
@@ -120,6 +138,13 @@ const fetchLiveDailyCard = () => {
 };
 
 onMounted(() => {
-    fetchLiveDailyCard();
+    fetchData();
 });
+
+watch(
+    () => props.period,
+    (period, value) => {
+        fetchData();
+    }
+);
 </script>

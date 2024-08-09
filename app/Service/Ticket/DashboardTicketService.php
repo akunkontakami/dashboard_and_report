@@ -3,12 +3,16 @@ namespace App\Service\Ticket;
 
 use App\Helpers\Yellow;
 use App\Models\Ticket\Ticket;
+use App\Models\Util\Call;
+use App\Models\Util\Rating;
 use Illuminate\Support\Facades\DB;
 
 class DashboardTicketService
 {
      public function __construct(
-          private $model = Ticket::class
+          private $model = Ticket::class,
+          private $call = Call::class,
+          private $rating = Rating::class,
      ) {
      }
 
@@ -255,7 +259,7 @@ class DashboardTicketService
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
                     $totalTicket = $ticket->total_ticket * $totalResponseSlaTime;
-                    if($ticketClosed = $ticket->total_closed){
+                    if ($ticketClosed = $ticket->total_closed) {
                          $frt = round($totalTicket / $ticketClosed);
                     }
                }
@@ -293,8 +297,8 @@ class DashboardTicketService
                $frt = 0;
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
-                    $totalTicket = $ticket->total_ticket ;
-                    if($durationClosed = $ticket->duration_closed){
+                    $totalTicket = $ticket->total_ticket;
+                    if ($durationClosed = $ticket->duration_closed) {
                          $frt = round($durationClosed / $totalTicket);
                     }
                }
@@ -305,4 +309,168 @@ class DashboardTicketService
                ];
           });
      }
+
+     public function countAllTicketByCategoryStatus($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result = $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->select([
+                    "st.status_category",
+                    DB::raw("count(tickets.id) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupBy('st.status_category')
+               ->get();
+          return $result;
+     }
+
+     public function findAllDailyTicketCategory($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $result =  $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->selectRaw("
+                    date(created_at) date,
+                    sum(case when st.status_category='Closed' then 1 else 0 end) as closed,
+                    sum(case when st.status_category='New' then 1 else 0 end) as new,
+                    sum(case when st.status_category='Solved' then 1 else 0 end) as solved,
+                    sum(case when st.status_category='Open' then 1 else 0 end) as open
+               ")
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("date(created_at)")
+               ->get();
+          return collect($dates)->map(function ($date) use ($result) {
+               $ticket = $result->where('date', $date)->first();
+               return [
+                    'date' => date('d-m-Y', strtotime($date)),
+                    'new' => intval($ticket?->new ?: 0),
+                    'closed' => intval($ticket?->closed ?: 0),
+                    'solved' => intval($ticket?->solved ?: 0),
+                    'open' => intval($ticket?->open ?: 0),
+               ];
+          });
+     }
+
+     public function findAllTicketCategoryBySource($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return $this->model::query()
+               ->select([
+                    'tickets.source',
+                    'tickets.call_id',
+                    'tickets.chat_id',
+                    DB::raw("count(distinct tickets.id) as total_ticket")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("tickets.source,tickets.call_id,tickets.chat_id")
+               ->get();
+     }
+
+     public function findAllMissedCall($user, $dates)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return $this->call::query()
+               ->select([
+                    DB::raw("count(distinct calls.id) as total")
+               ])
+               ->where('calls.company_id', $companyId)
+               ->where("calls.category", "Missed Call")
+               ->whereRaw("date(calls.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->get()
+               ->sum('total');
+     }
+
+     public function findAllCsatRating($user, $dates)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $csat =  $this->rating::query()
+               ->fromRaw("
+                    ratings,
+                    JSON_TABLE(csat_rating, '$.ratings[*]'
+                    COLUMNS (
+                         rating INT PATH '$.rating'
+                    )
+                    ) AS rt
+               ")
+               ->select([
+                    "rt.rating",
+                    DB::raw("count(*) as total")
+               ])
+               ->where('ratings.company_id', $companyId)
+               ->whereRaw("date(ratings.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupBy('rt.rating')
+               ->get();
+          
+          $goodRating = $csat->whereIn('rating',[4,5])->sum('total');
+          $badRating = $csat->whereIn('rating',[1,2,3])->sum('total');
+          $allRating = $csat->sum('total');
+          if($allRating > 0){
+               $goodRating = $goodRating  / $allRating * 100;
+               $badRating = $badRating  / $allRating * 100;
+          }
+          return [
+               'good' => round($goodRating),
+               'bad' => round($badRating),
+               'total' => $allRating,
+          ];
+     }
+
+     public function findAllTicketBtStatusCategory($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return  $this->model::query()
+               ->join("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->select([
+                    'tickets.status',
+                    'st.status_category',
+                    DB::raw("count(tickets.status) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("tickets.status,st.status_category")
+               ->orderByRaw("count(tickets.status) desc")
+               ->get();
+     }
+
 }

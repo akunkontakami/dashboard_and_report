@@ -16,7 +16,7 @@
                     First Response Time (FRT) Last 7 days
                 </h1>
                 <InboundFirstResponseTime />
-                
+
                 <h1 class="font-krub-bold text-[13px] mb-1 mt-3">
                     First Resolution Time Last 7 days
                 </h1>
@@ -26,8 +26,8 @@
     </section>
 </template>
 <script setup lang="ts">
-import CardLiveDaily from "@/Components/Card/CardLiveDaily.vue";
-import InboundTicketSolvedByAgent from "@/Components/Chart/InboundTicketSolvedByAgent.vue";
-import InboundFirstResponseTime from "@/Components/Chart/InboundFirstResponseTime.vue";
-import InboundFirstResolutionTime from "@/Components/Chart/InboundFirstResolutionTime.vue";
+import CardLiveDaily from "@/Components/Card/Inbound/CardLiveDaily.vue";
+import InboundTicketSolvedByAgent from "@/Components/Chart/Inbound/InboundTicketSolvedByAgent.vue";
+import InboundFirstResponseTime from "@/Components/Chart/Inbound/InboundFirstResponseTime.vue";
+import InboundFirstResolutionTime from "@/Components/Chart/Inbound/InboundFirstResolutionTime.vue";
 </script>
