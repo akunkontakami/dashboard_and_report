@@ -240,14 +240,14 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $result = $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
                ->selectRaw("
                     date(created_at) date,
                     count(tickets.id) as total_ticket,
-                    sum(case when st.status_category='Closed' then 1 else 0 end) as total_closed 
+                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total_closed 
                ")
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
@@ -279,14 +279,14 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $result = $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
                ->selectRaw("
                     date(created_at) date,
                     count(tickets.id) as total_ticket,
-                    sum(case when st.status_category='Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed  
+                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed  
                ")
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
@@ -318,18 +318,30 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $result = $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
                ->select([
-                    "st.status_category",
+                    DB::raw("
+                         (
+                              case 
+                              when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
+                              when st.status_category is  null then 'New' 
+                              else st.status_category end
+                         ) as status_category
+                    "),
                     DB::raw("count(tickets.id) as total")
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-               ->groupBy('st.status_category')
+               ->groupByRaw("
+                    case 
+                    when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
+                    when st.status_category is  null then 'New' 
+                    else st.status_category end
+               ")
                ->get();
           return $result;
      }
@@ -342,14 +354,14 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $result =  $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
                ->selectRaw("
                     date(created_at) date,
-                    sum(case when st.status_category='Closed' then 1 else 0 end) as closed,
-                    sum(case when st.status_category='New' then 1 else 0 end) as new,
+                    sum(case when st.status_category='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as closed,
+                    sum(case when st.status_category='New' or tickets.status='New' then 1 else 0 end) as new,
                     sum(case when st.status_category='Solved' then 1 else 0 end) as solved,
                     sum(case when st.status_category='Open' then 1 else 0 end) as open
                ")
@@ -456,13 +468,20 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           return  $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
                ->select([
                     'tickets.status',
-                    'st.status_category',
+                    DB::raw("
+                         (
+                              case 
+                              when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
+                              when st.status_category is  null then 'New' 
+                              else st.status_category end
+                         ) as status_category
+                    "),
                     DB::raw("count(tickets.status) as total")
                ])
                ->where('tickets.company_id', $companyId)
