@@ -29,26 +29,17 @@
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Daily Ticket Activity
                 </h1>
-                <InboundKpiDailyActivityChart :period="period"/>
+                <InboundKpiDailyActivityChart :period="period" />
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3 flex flex-col">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     First Response Time & First Resolution Time
                 </h1>
-                <InboundKpiSlaChart :period="period"/>
+                <InboundKpiSlaChart :period="period" />
             </div>
         </div>
         <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-2 mt-3">
-            <ChartPieTicketAllChannel :period="period"/>
-            <CardPieChannel label="Voice PSTN" :badges="voicePstnBadges">
-                <div class="bg-[#ddd] w-[120px] h-[120px] rounded-full"></div>
-            </CardPieChannel>
-            <CardPieChannel label="Web Call" :badges="webCallBadges">
-                <div class="bg-[#ddd] w-[120px] h-[120px] rounded-full"></div>
-            </CardPieChannel>
-            <CardPieChannel label="CSAT" :badges="csatBadges">
-                <div class="bg-[#ddd] w-[120px] h-[120px] rounded-full"></div>
-            </CardPieChannel>
+            <ChartPieTicketAllChannel :period="period" />
         </div>
         <div class="bg-white mt-3 px-3 py-2 rounded-xl border">
             <h1 class="font-krub-bold text-[13px] mb-1 text-center">
@@ -69,15 +60,6 @@ import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
 import { ref } from "vue";
 
 const period = ref("today");
-const voicePstnBadges = ref([
-    ["bg-[#FF605C]", "Abandoned call"],
-    ["bg-[#F3722C]", "Missed Call"],
-]);
-const webCallBadges = ref([["bg-[#F94144]", "Missed Call"]]);
-const csatBadges = ref([
-    ["bg-[#90BE6D]", "Good"],
-    ["bg-[#F94144]", "Bad"],
-]);
 
 const updatePeriode = (value: string) => {
     period.value = value;

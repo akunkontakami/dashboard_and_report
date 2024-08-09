@@ -5,7 +5,25 @@
         </h1>
         <div class="flex px-2 py-4 justify-center items-center">
             <div class="w-[60%] flex justify-center items-center">
-                <slot />
+                <span
+                    class="text-[12px] mt-3 block"
+                    v-if="loading"
+                >
+                    Loading ...
+                </span>
+                <div
+                    v-else-if="
+                        !loading &&
+                        isEmpty
+                    "
+                    class="flex flex-col justify-center items-center"
+                >
+                    <EmptyState class="w-[100px] h-[100px]" />
+                    <span class="text-[11px] mt-3 block"> No Data Found </span>
+                </div>
+                <div v-else>
+                    <slot />
+                </div>
             </div>
             <div class="w-[40%] flex-1 ps-2">
                 <ul class="flex flex-col gap-1 items-start justify-start">
@@ -25,5 +43,6 @@
     </div>
 </template>
 <script setup lang="ts">
-defineProps(["label", "badges"]);
+import EmptyState from "@/Components/Icon/Etc/EmptyState.vue";
+defineProps(["label", "badges", "loading", "isEmpty"]);
 </script>

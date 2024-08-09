@@ -163,19 +163,26 @@ trait InboundKpiData
           });
      }
 
-     public function kpiVoicePstn(Request $request)
+     public function kpiVoicePstn(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
      }
 
-     public function kpiWebCall(Request $request)
+     public function kpiWebCall(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $missedCall =  $dashboardTicketService->findAllMissedCall($user,$dates);
+          return [$missedCall];
      }
 
-     public function kpiCsat(Request $request)
+     public function kpiCsat(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $csat =  $dashboardTicketService->findAllCsatRating($user,$dates);
+          return $csat;
      }
      public function kpiTicketStatusChart(Request $request)
      {

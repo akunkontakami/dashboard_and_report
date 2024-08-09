@@ -3,12 +3,16 @@ namespace App\Service\Ticket;
 
 use App\Helpers\Yellow;
 use App\Models\Ticket\Ticket;
+use App\Models\Util\Call;
+use App\Models\Util\Rating;
 use Illuminate\Support\Facades\DB;
 
 class DashboardTicketService
 {
      public function __construct(
-          private $model = Ticket::class
+          private $model = Ticket::class,
+          private $call = Call::class,
+          private $rating = Rating::class,
      ) {
      }
 
@@ -385,6 +389,63 @@ class DashboardTicketService
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.source,tickets.call_id,tickets.chat_id")
                ->get();
+     }
+
+     public function findAllMissedCall($user, $dates)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          return $this->call::query()
+               ->select([
+                    DB::raw("count(distinct calls.id) as total")
+               ])
+               ->where('calls.company_id', $companyId)
+               ->where("calls.category", "Missed Call")
+               ->whereRaw("date(calls.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->get()
+               ->sum('total');
+     }
+
+     public function findAllCsatRating($user, $dates)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $csat =  $this->rating::query()
+               ->fromRaw("
+                    ratings,
+                    JSON_TABLE(csat_rating, '$.ratings[*]'
+                    COLUMNS (
+                         rating INT PATH '$.rating'
+                    )
+                    ) AS rt
+               ")
+               ->select([
+                    "rt.rating",
+                    DB::raw("count(*) as total")
+               ])
+               ->where('ratings.company_id', $companyId)
+               ->whereRaw("date(ratings.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupBy('rt.rating')
+               ->get();
+          
+          $goodRating = $csat->whereIn('rating',[4,5])->sum('total');
+          $badRating = $csat->whereIn('rating',[1,2,3])->sum('total');
+          $allRating = $csat->sum('total');
+          if($allRating > 0){
+               $goodRating = $goodRating  / $allRating * 100;
+               $badRating = $badRating  / $allRating * 100;
+          }
+          return [
+               'good' => round($goodRating),
+               'bad' => round($badRating),
+               'total' => $allRating,
+          ];
      }
 
 }
