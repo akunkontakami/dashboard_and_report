@@ -9,7 +9,7 @@
         ></VueApexCharts>
         <div v-if="!haveData || loading" class="flex flex-col justify-center items-center py-3 min-h-[265px]">
             <EmptyState class="w-[100px] h-[100px]"v-if="!loading"/>
-            <span class="text-[12px] mt-3 block" v-if="!loading">No Data Found</span>
+            <span class="text-[12px] mt-3 block" v-if="!loading">Data not found</span>
             <span class="text-[12px] mt-3 block" v-if="loading">Loading ...</span>
         </div>
     </div>
