@@ -3,7 +3,7 @@
         <div class="col-span-2">
             <VueApexCharts
                 type="bar"
-                :height="300"
+                :height="250"
                 :options="chart.options"
                 :series="chart.series"
                 v-if="chart && haveData && !loading"

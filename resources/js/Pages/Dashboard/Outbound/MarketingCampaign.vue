@@ -20,14 +20,15 @@
                     />
                 </div>
             </div>
-            <div>
+            <div class="flex flex-col h-full">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Top 5 Agents by Close Deals
                 </h1>
-                <ul class="flex flex-col gap-2">
-                    <li v-for="n in 5">
-                        <CardAgentDeal />
-                    </li>
+                <ul class="flex flex-col gap-2 flex-1">
+                    <CardAgentDeal 
+                        :period="period"
+                        :campaignId="campaignId"
+                    />
                 </ul>
             </div>
         </div>
@@ -44,7 +45,7 @@ import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
 import DropdownCampaign from "@/Components/Dropdown/DropdownCampaign.vue";
 import OutboundMarketingCampaignChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignChart.vue";
 import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
-import { ref,onBeforeMount } from "vue";
+import { ref, onBeforeMount } from "vue";
 import {
     getQueryParam,
     routeAppendParam,
@@ -64,14 +65,14 @@ const updateCampaign = (value: string) => {
     campaignId.value = value;
 };
 
-const init = () =>{
-    const campaigns = props.campaigns
-    if(campaigns.length){
-        campaignId.value = campaigns[0].id
+const init = () => {
+    const campaigns = props.campaigns;
+    if (campaigns.length) {
+        campaignId.value = campaigns[0].id;
     }
-}
+};
 
-onBeforeMount(()=>{
-    init()
-})
+onBeforeMount(() => {
+    init();
+});
 </script>

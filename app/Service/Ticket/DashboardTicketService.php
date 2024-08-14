@@ -184,7 +184,7 @@ class DashboardTicketService
           ];
      }
 
-     public function findTopTenSolvedClosedTicketAgent($user, $date, $type)
+     public function findTopSolvedClosedTicketAgent($user, $dates, $type,$top = 10,$campaignId = null)
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
@@ -192,7 +192,7 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $result = $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
@@ -203,23 +203,26 @@ class DashboardTicketService
                ->select([
                     'tickets.current_agent_id',
                     'company_users.name',
-                    DB::raw("count(tickets.id) as total")
+                    'company_users.profile',
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total"),
+                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->whereRaw('date(tickets.created_at) = ?', $date)
+               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
-                    $query->orWhereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->whereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
                })
-               ->groupBy(["tickets.current_agent_id", "company_users.name"])
+               ->groupBy(["tickets.current_agent_id", "company_users.name","company_users.profile"])
                ->orderBy("total", "desc")
-               ->take(10)
+               ->take($top)
                ->get();
-
           $items = $result->toArray();
           $totalData = $result->count();
-          if ($totalData < 10 && $totalData) {
-               $appends = collect(range(1, 10 - $totalData))->map(fn($row) => [
+          if ($totalData < $top && $totalData && $type=='inbound') {
+               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
                     'current_agent_id' => null,
                     'name' => "#",
                     'total' => 0

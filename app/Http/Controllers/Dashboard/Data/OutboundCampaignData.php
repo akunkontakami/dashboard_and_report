@@ -58,9 +58,12 @@ trait OutboundCampaignData
           ];
      }
 
-     public function topClosedCampaignAgent(Request $request)
+     public function topClosedCampaignAgent(Request $request, DashboardTicketService $dashboardTicketService)
      {
-
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, $request->campaign_id);
      }
 
      public function ticketByTypeCampaign(Request $request)
