@@ -38,6 +38,7 @@ import VueApexCharts from "vue3-apexcharts";
 import axios from "axios";
 import EmptyState from "../../Icon/Etc/EmptyState.vue";
 import { ref, onMounted, watch } from "vue";
+
 const props = defineProps(["period"]);
 const loading = ref(true);
 const haveData = ref(false);

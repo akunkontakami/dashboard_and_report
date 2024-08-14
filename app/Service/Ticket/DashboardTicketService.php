@@ -353,7 +353,7 @@ class DashboardTicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          $result =  $this->model::query()
+          $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
@@ -428,7 +428,7 @@ class DashboardTicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          $csat =  $this->rating::query()
+          $csat = $this->rating::query()
                ->fromRaw("
                     ratings,
                     JSON_TABLE(csat_rating, '$.ratings[*]'
@@ -445,13 +445,13 @@ class DashboardTicketService
                ->whereRaw("date(ratings.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupBy('rt.rating')
                ->get();
-          
-          $goodRating = $csat->whereIn('rating',[4,5])->sum('total');
-          $badRating = $csat->whereIn('rating',[1,2,3])->sum('total');
-          $allRating = $csat->where('rating','!=',0)->sum('total');
-          if($allRating > 0){
-               $goodRating = $goodRating  / $allRating * 100;
-               $badRating = $badRating  / $allRating * 100;
+
+          $goodRating = $csat->whereIn('rating', [4, 5])->sum('total');
+          $badRating = $csat->whereIn('rating', [1, 2, 3])->sum('total');
+          $allRating = $csat->where('rating', '!=', 0)->sum('total');
+          if ($allRating > 0) {
+               $goodRating = $goodRating / $allRating * 100;
+               $badRating = $badRating / $allRating * 100;
           }
           return [
                'good' => round($goodRating),
@@ -467,7 +467,7 @@ class DashboardTicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          return  $this->model::query()
+          return $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
@@ -490,6 +490,37 @@ class DashboardTicketService
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")
                ->get();
+     }
+
+     public function findAllTicketOutboundMarketingCampaign($user, $dates, $type, $filter)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $marketingCampaign = @$filter['campaign_id'];
+
+          $subJoinTicketHistory = DB::table('ticket_histories')
+               ->selectRaw("ticket_id,count(id) as call_attempt")
+               ->groupBy("ticket_id");
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
+               ->select([
+                    DB::raw("count(distinct tickets.id) as data_size"),
+                    DB::raw("sum(h.call_attempt) as call_attempt"),
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.marketing_campaign_id', $marketingCampaign)
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->first();
      }
 
 }

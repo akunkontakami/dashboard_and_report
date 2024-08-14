@@ -1,7 +1,7 @@
 <template>
      <section>
          <div class="flex justify-between mb-3">
-             <DropdownProduct />
+             <DropdownProduct :products="products"/>
              <DropdownPeriode :period="period" @update="updatePeriode" />
          </div>
          <div class="grid md:grid-cols-2 grid-cols-1 gap-2">
@@ -37,6 +37,7 @@
  import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
  import { ref } from "vue";
  
+ defineProps(['products'])
  const period = ref("today");
  const updatePeriode = (value: string) => {
      period.value = value;

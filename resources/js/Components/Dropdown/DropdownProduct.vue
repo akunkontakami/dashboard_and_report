@@ -17,15 +17,17 @@
          <Dropdown
              x-show="dropdownOpen"
              x-anchor.bottom-start="$refs.button"
-             class="z-10 mt-1"
+            class="z-10 mt-1 max-h-[300px] overflow-auto"
          >
-             <DropdownMenu> Product 1 </DropdownMenu>
-             <DropdownMenu> Product 1 </DropdownMenu>
+             <DropdownMenu v-for="product in products">
+                {{ product.name }}
+             </DropdownMenu>
          </Dropdown>
      </div>
  </template>
  <script setup lang="ts">
  import Dropdown from "./Dropdown.vue";
  import DropdownMenu from "./DropdownMenu.vue";
+ defineProps(['products'])
  </script>
  
