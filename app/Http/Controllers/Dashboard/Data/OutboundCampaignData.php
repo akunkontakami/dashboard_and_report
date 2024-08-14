@@ -63,11 +63,30 @@ trait OutboundCampaignData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, $request->campaign_id);
+          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, [
+               'campaign_id' => $request->campaign_id
+          ]);
      }
 
-     public function ticketByTypeCampaign(Request $request)
+     public function ticketByTypeCampaign(Request $request,DashboardTicketService $dashboardTicketService)
      {
-
+          $colors  = [
+               "New" => "#FF605C",
+               "Open" => "#FFBD44",
+               "Solved" => "#26C0F1",
+               "Closed" => "#00CA4E"
+          ];
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'inbound',[
+               'campaign_id' => $request->campaign_id
+          ])->map(function($row) use($colors){
+               $color = @$colors[$row->status_category] ?: '#FF605C';
+               return [
+                    ...$row->toArray(),
+                    'color' => $color,
+               ];
+          });
      }
 }

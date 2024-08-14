@@ -184,13 +184,15 @@ class DashboardTicketService
           ];
      }
 
-     public function findTopSolvedClosedTicketAgent($user, $dates, $type,$top = 10,$campaignId = null)
+     public function findTopSolvedClosedTicketAgent($user, $dates, $type,$top = 10,$filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
+          $campaignId = @$filter['campaign_id'];
+
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -463,13 +465,14 @@ class DashboardTicketService
           ];
      }
 
-     public function findAllTicketBtStatusCategory($user, $dates, $type)
+     public function findAllTicketByStatusCategory($user, $dates, $type,$filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
+          $campaignId = @$filter['campaign_id'];
           return $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -489,6 +492,7 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
+               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")

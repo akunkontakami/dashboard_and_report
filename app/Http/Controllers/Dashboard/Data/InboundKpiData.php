@@ -194,7 +194,7 @@ trait InboundKpiData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          return $dashboardTicketService->findAllTicketBtStatusCategory($user, $dates, 'inbound')->map(function($row) use($colors){
+          return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'inbound')->map(function($row) use($colors){
                $color = @$colors[$row->status_category] ?: '#FF605C';
                return [
                     ...$row->toArray(),

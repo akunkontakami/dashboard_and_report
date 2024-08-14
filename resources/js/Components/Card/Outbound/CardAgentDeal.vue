@@ -47,14 +47,15 @@ import EmptyState from "../../Icon/Etc/EmptyState.vue";
              })
          )
          .then((result) => {
-          console.log(result)
              data.value = result.data;
              loading.value = false;
          });
  };
  
  onMounted(() => {
-     fetchData();
+    if(props.campaignId){
+        fetchData();
+    }
  });
  
  watch(

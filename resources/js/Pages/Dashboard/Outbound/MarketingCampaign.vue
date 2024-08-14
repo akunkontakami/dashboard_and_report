@@ -25,10 +25,7 @@
                     Top 5 Agents by Close Deals
                 </h1>
                 <ul class="flex flex-col gap-2 flex-1">
-                    <CardAgentDeal 
-                        :period="period"
-                        :campaignId="campaignId"
-                    />
+                    <CardAgentDeal :period="period" :campaignId="campaignId" />
                 </ul>
             </div>
         </div>
@@ -36,7 +33,10 @@
             <h1 class="font-krub-bold text-[13px] mb-1 text-center">
                 Ticket by Type
             </h1>
-            <div class="h-[300px]"></div>
+            <OutboundCampaignTicketByType
+                :period="period"
+                :campaignId="campaignId"
+            />
         </div>
     </section>
 </template>
@@ -44,6 +44,7 @@
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
 import DropdownCampaign from "@/Components/Dropdown/DropdownCampaign.vue";
 import OutboundMarketingCampaignChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignChart.vue";
+import OutboundCampaignTicketByType from "@/Components/Chart/Outbound/OutboundCampaignTicketByType.vue";
 import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
 import { ref, onBeforeMount } from "vue";
 import {
