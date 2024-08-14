@@ -54,8 +54,8 @@ trait InboundLiveDailyData
      public function liveDailyTicketSolved(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
-          $currentDate = now();
-          return $dashboardTicketService->findTopTenSolvedClosedTicketAgent($user, $currentDate->format('Y-m-d'), "inbound");
+          $currentDate = now()->format('Y-m-d');
+          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, [$currentDate,$currentDate], "inbound",10);
      }
 
      public function liveDailyFirstResponseTime(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)

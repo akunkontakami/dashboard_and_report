@@ -4,8 +4,14 @@
             <TabCategory tab="outbound" />
         </template>
         <TabMenu :active="type" />
-        <MarketingCampaign v-if="type=='marketing-campaign'"/>
-        <Product v-if="type=='product'"/>
+        <MarketingCampaign
+            v-if="type == 'marketing-campaign'"
+            :campaigns="campaigns"
+        />
+        <Product 
+            v-if="type == 'product'"
+            :products="products"
+        />
     </AppLayout>
 </template>
 <script setup lang="ts">
@@ -15,5 +21,5 @@ import TabMenu from "./TabMenu.vue";
 import MarketingCampaign from "./MarketingCampaign.vue";
 import Product from "./Product.vue";
 
-defineProps(["type"]);
+defineProps(["type", "campaigns", "products"]);
 </script>

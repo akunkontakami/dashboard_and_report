@@ -45,7 +45,7 @@
             <h1 class="font-krub-bold text-[13px] mb-1 text-center">
                 Ticket by Type
             </h1>
-            <InboundKpiTicketByType :period="period"/>
+            <InboundKpiTicketByType :period="period" />
         </div>
     </section>
 </template>
@@ -58,10 +58,12 @@ import InboundKpiSlaChart from "@/Components/Chart/Inbound/InboundKpiSlaChart.vu
 import ChartPieTicketAllChannel from "@/Components/Chart/Inbound/ChartPieTicketAllChannel.vue";
 import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
 import { ref } from "vue";
+import { getQueryParam, routeAppendParam } from "@/Plugins/Function/global-function";
 
-const period = ref("today");
+const period = ref(getQueryParam('period',"today"));
 
 const updatePeriode = (value: string) => {
+    routeAppendParam({ period: value });
     period.value = value;
 };
 </script>

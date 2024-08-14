@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthLoginController;
 use App\Http\Controllers\Dashboard\InboundDashboardController;
+use App\Http\Controllers\Dashboard\OutboundDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,7 +38,7 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('live-daily/first-response-time', 'liveDailyFirstResponseTime')->name('live-daily.first-response-time');
                     Route::get('live-daily/first-resolution-time', 'liveDailyFirstResolutionTime')->name('live-daily.first-resolution-time');
 
-                    
+
                     Route::get('kpi/ticket-status', 'kpiTicketStatus')->name('kpi.ticket-status');
                     Route::get('kpi/sla-time', 'kpiSlaTime')->name('kpi.sla-time');
                     Route::get('kpi/ticket-activity', 'kpiTicketActivity')->name('kpi.ticket-activity');
@@ -47,5 +48,14 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('kpi/web-call', 'kpiWebCall')->name('kpi.web-call');
                     Route::get('kpi/csat', 'kpiCsat')->name('kpi.csat');
                     Route::get('kpi/ticket-status/chart', 'kpiTicketStatusChart')->name('kpi.ticket-status.chart');
+               });
+
+          Route::controller(OutboundDashboardController::class)
+               ->as('dashboard.outbound.data.')
+               ->prefix("dashboard/outbound")
+               ->group(function () {
+                    Route::get('campaign/chart-campaign', 'chartCampaign')->name('campaign.chart-campaign');
+                    Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('campaign.top-closed');
+                    Route::get('campaign/ticket-by-type', 'ticketByTypeCampaign')->name('campaign.ticket-by-type');
                });
      });

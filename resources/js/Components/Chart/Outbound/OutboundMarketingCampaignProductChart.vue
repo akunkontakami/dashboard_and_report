@@ -1,55 +1,49 @@
 <template>
-    <div>
-        <ul class="flex  gap-1 items-center justify-center">
-            <li
-                class="text-[10px] flex gap-1 items-center justify-center"
-                v-for="badge in categories"
-            >
-                <span
-                    class="block w-[10px] h-[10px] rounded-sm"
-                    :style="`background-color:${badge[1]}`"
-                ></span>
-                <span>{{ badge[0] }}</span>
-            </li>
-        </ul>
-        <VueApexCharts
-            type="bar"
-            :height="400"
-            :options="chart.options"
-            :series="chart.series"
-            v-if="chart && haveData && !loading"
-        ></VueApexCharts>
-        <div
-            v-if="!haveData || loading"
-            class="flex flex-col justify-center items-center py-3 min-h-[265px]"
-        >
-            <EmptyState class="w-[100px] h-[100px]" v-if="!loading" />
-            <span class="text-[12px] mt-3 block" v-if="!loading"
-                >Data not found</span
-            >
-            <span class="text-[12px] mt-3 block" v-if="loading"
-                >Loading ...</span
-            >
+    <div class="grid grid-cols-3 gap-1 h-full" v-if="haveData && !loading">
+        <div class="col-span-2">
+            <VueApexCharts
+                type="bar"
+                :height="250"
+                :options="chart.options"
+                :series="chart.series"
+                v-if="chart && haveData && !loading"
+            ></VueApexCharts>
         </div>
+        <div class="flex justify-center items-center">
+            <div
+                class="border rounded-xl shadow-lg w-fit flex flex-col items-center px-4 py-3"
+            >
+                <h1 class="text-4xl font-bold">
+                    {{ higher.total }}
+                </h1>
+                <p class="text-[11px]">
+                    {{ higher.label }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div
+        class="flex flex-col justify-center items-center py-3 min-h-[265px]"
+        v-else
+    >
+        <EmptyState class="w-[100px] h-[100px]" v-if="!loading" />
+        <span class="text-[12px] mt-3 block" v-if="!loading"
+            >Data not found</span
+        >
+        <span class="text-[12px] mt-3 block" v-if="loading">Loading ...</span>
     </div>
 </template>
 <script setup lang="ts">
 import VueApexCharts from "vue3-apexcharts";
-import axios from "axios";
 import EmptyState from "../../Icon/Etc/EmptyState.vue";
+import axios from "axios";
 import { ref, onMounted, watch } from "vue";
 
-const props = defineProps(["period"]);
+const props = defineProps(["period","campaignId","productId"]);
 const loading = ref(true);
 const haveData = ref(false);
 const chart: any = ref(null);
-
-const categories = ref([
-    ["New", "#FF605C"],
-    ["Open", "#FFBD44"],
-    ["Solved", "#26C0F1"],
-    ["Closed", "#00CA4E"],
-]);
+const higher: any = ref(null);
 
 const chartConfig = {
     series: [
@@ -66,7 +60,6 @@ const chartConfig = {
         plotOptions: {
             bar: {
                 distributed: true,
-                horizontal: true,
                 borderRadius: 4,
                 borderRadiusApplication: "end",
                 dataLabels: {
@@ -83,7 +76,6 @@ const chartConfig = {
                 fontWeight: "normal",
                 color: "black",
             },
-            offsetX: 30,
             background: {
                 enabled: true,
                 foreColor: "#000",
@@ -93,16 +85,6 @@ const chartConfig = {
         },
         xaxis: {
             categories: [],
-            show: false,
-            labels: {
-                show: false,
-            },
-            axisBorder: {
-                show: false,
-            },
-            axisTicks: {
-                show: false,
-            },
         },
         yaxis: {
             labels: {
@@ -123,20 +105,24 @@ const fetchData = () => {
     loading.value = true;
     axios
         .get(
-            route("dashboard.inbound.data.kpi.ticket-status.chart", {
+            route("dashboard.outbound.data.campaign.chart-campaign", {
                 periode: props.period,
+                campaign_id : props.campaignId,
+                product_id : props.productId
             })
         )
         .then((result) => {
-            const items = result.data;
+            const data = result.data
+            const items = data.items;
+            higher.value = data.higher
             loading.value = false;
             chartConfig.series[0] = {
                 name: "Total",
-                data: items.map((row: any) => row.total),
-                label: items.map((row: any) => row.status_category),
+                data: items.map((row: any) => row.value),
+                label: items.map((row: any) => row.label),
             };
             chartConfig.options.xaxis.categories = items.map(
-                (row: any) => row.status
+                (row: any) => row.label
             );
             chartConfig.options.colors = items.map((row: any) => row.color);
             chart.value = chartConfig;
@@ -147,10 +133,26 @@ const fetchData = () => {
 };
 
 onMounted(() => {
-    fetchData();
+    if(props.campaignId || props.productId){
+        fetchData();
+    }
 });
+
 watch(
     () => props.period,
+    (period, value) => {
+        fetchData();
+    }
+);
+watch(
+    () => props.campaignId,
+    (period, value) => {
+        fetchData();
+    }
+);
+
+watch(
+    () => props.productId,
     (period, value) => {
         fetchData();
     }

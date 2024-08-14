@@ -35,8 +35,8 @@ export const getAllQueryParameter = () => {
      return result;
 }
 
-export const getQueryParam = (key: string) => {
-     return new URLSearchParams(window.location.search).get(key) || null
+export const getQueryParam = (key: string,defaultValue?:string) => {
+     return new URLSearchParams(window.location.search).get(key) || defaultValue
 }
 
 

@@ -184,15 +184,18 @@ class DashboardTicketService
           ];
      }
 
-     public function findTopTenSolvedClosedTicketAgent($user, $date, $type)
+     public function findTopSolvedClosedTicketAgent($user, $dates, $type,$top = 10,$filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
+          $campaignId = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
           $result = $this->model::query()
-               ->join("view_status_table_mapper as st", function ($join) {
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
@@ -203,23 +206,27 @@ class DashboardTicketService
                ->select([
                     'tickets.current_agent_id',
                     'company_users.name',
-                    DB::raw("count(tickets.id) as total")
+                    'company_users.profile',
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total"),
+                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->whereRaw('date(tickets.created_at) = ?', $date)
+               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
-                    $query->orWhereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->whereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
                })
-               ->groupBy(["tickets.current_agent_id", "company_users.name"])
+               ->groupBy(["tickets.current_agent_id", "company_users.name","company_users.profile"])
                ->orderBy("total", "desc")
-               ->take(10)
+               ->take($top)
                ->get();
-
           $items = $result->toArray();
           $totalData = $result->count();
-          if ($totalData < 10 && $totalData) {
-               $appends = collect(range(1, 10 - $totalData))->map(fn($row) => [
+          if ($totalData < $top && $totalData && $type=='inbound') {
+               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
                     'current_agent_id' => null,
                     'name' => "#",
                     'total' => 0
@@ -353,7 +360,7 @@ class DashboardTicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          $result =  $this->model::query()
+          $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
@@ -428,7 +435,7 @@ class DashboardTicketService
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          $csat =  $this->rating::query()
+          $csat = $this->rating::query()
                ->fromRaw("
                     ratings,
                     JSON_TABLE(csat_rating, '$.ratings[*]'
@@ -445,13 +452,13 @@ class DashboardTicketService
                ->whereRaw("date(ratings.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupBy('rt.rating')
                ->get();
-          
-          $goodRating = $csat->whereIn('rating',[4,5])->sum('total');
-          $badRating = $csat->whereIn('rating',[1,2,3])->sum('total');
-          $allRating = $csat->where('rating','!=',0)->sum('total');
-          if($allRating > 0){
-               $goodRating = $goodRating  / $allRating * 100;
-               $badRating = $badRating  / $allRating * 100;
+
+          $goodRating = $csat->whereIn('rating', [4, 5])->sum('total');
+          $badRating = $csat->whereIn('rating', [1, 2, 3])->sum('total');
+          $allRating = $csat->where('rating', '!=', 0)->sum('total');
+          if ($allRating > 0) {
+               $goodRating = $goodRating / $allRating * 100;
+               $badRating = $badRating / $allRating * 100;
           }
           return [
                'good' => round($goodRating),
@@ -460,14 +467,17 @@ class DashboardTicketService
           ];
      }
 
-     public function findAllTicketBtStatusCategory($user, $dates, $type)
+     public function findAllTicketByStatusCategory($user, $dates, $type,$filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
-          return  $this->model::query()
+          $campaignId = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
+          return $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
@@ -486,10 +496,45 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
+               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")
                ->get();
+     }
+
+     public function findAllTicketOutboundMarketingCampaign($user, $dates, $type, $filter)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalation_type = $user->escalation_type;
+          $marketingCampaign = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
+          $subJoinTicketHistory = DB::table('ticket_histories')
+               ->selectRaw("ticket_id,count(id) as call_attempt")
+               ->groupBy("ticket_id");
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
+               ->select([
+                    DB::raw("count(distinct tickets.id) as data_size"),
+                    DB::raw("sum(h.call_attempt) as call_attempt"),
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
+               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->first();
      }
 
 }
