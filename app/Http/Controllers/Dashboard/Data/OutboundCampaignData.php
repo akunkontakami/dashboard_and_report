@@ -14,7 +14,8 @@ trait OutboundCampaignData
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
 
           $data = $dashboardTicketService->findAllTicketOutboundMarketingCampaign($user, $dates, 'outbound', [
-               'campaign_id' => $request->campaign_id
+               'campaign_id' => $request->campaign_id,
+               'product_id' => $request->product_id
           ]);
 
           $data_size = $data?->data_size ?: 0;
@@ -64,7 +65,8 @@ trait OutboundCampaignData
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
           return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, [
-               'campaign_id' => $request->campaign_id
+               'campaign_id' => $request->campaign_id,
+               'product_id' => $request->product_id
           ]);
      }
 
@@ -79,8 +81,9 @@ trait OutboundCampaignData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'inbound',[
-               'campaign_id' => $request->campaign_id
+          return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'outbound',[
+               'campaign_id' => $request->campaign_id,
+               'product_id' => $request->product_id
           ])->map(function($row) use($colors){
                $color = @$colors[$row->status_category] ?: '#FF605C';
                return [

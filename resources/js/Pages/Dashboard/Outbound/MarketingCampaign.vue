@@ -14,7 +14,7 @@
                     Marketing Campaign
                 </h1>
                 <div class="bg-white rounded-xl px-3 py-2 border h-full">
-                    <OutboundMarketingCampaignChart
+                    <OutboundMarketingCampaignProductChart
                         :period="period"
                         :campaignId="campaignId"
                     />
@@ -33,7 +33,7 @@
             <h1 class="font-krub-bold text-[13px] mb-1 text-center">
                 Ticket by Type
             </h1>
-            <OutboundCampaignTicketByType
+            <OutboundCampaignProductTicketByType
                 :period="period"
                 :campaignId="campaignId"
             />
@@ -43,8 +43,8 @@
 <script setup lang="ts">
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
 import DropdownCampaign from "@/Components/Dropdown/DropdownCampaign.vue";
-import OutboundMarketingCampaignChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignChart.vue";
-import OutboundCampaignTicketByType from "@/Components/Chart/Outbound/OutboundCampaignTicketByType.vue";
+import OutboundMarketingCampaignProductChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignProductChart.vue";
+import OutboundCampaignProductTicketByType from "@/Components/Chart/Outbound/OutboundCampaignProductTicketByType.vue";
 import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
 import { ref, onBeforeMount } from "vue";
 import {

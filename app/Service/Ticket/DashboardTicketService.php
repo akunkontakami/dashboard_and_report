@@ -192,6 +192,7 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $campaignId = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
 
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
@@ -212,6 +213,7 @@ class DashboardTicketService
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
                     $query->whereIn('st.status_category', ["Solved", "Closed"]);
@@ -473,6 +475,8 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $campaignId = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
           return $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -493,6 +497,7 @@ class DashboardTicketService
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")
@@ -507,6 +512,7 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalation_type = $user->escalation_type;
           $marketingCampaign = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
 
           $subJoinTicketHistory = DB::table('ticket_histories')
                ->selectRaw("ticket_id,count(id) as call_attempt")
@@ -525,7 +531,8 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->where('tickets.marketing_campaign_id', $marketingCampaign)
+               ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->first();
      }

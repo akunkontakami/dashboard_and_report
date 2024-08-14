@@ -34,7 +34,7 @@
 import EmptyState from "../../Icon/Etc/EmptyState.vue";
  import axios from "axios";
  import { ref, onMounted, watch } from "vue";
- const props = defineProps(["period","campaignId"]);
+ const props = defineProps(["period","campaignId","productId"]);
  
  const loading = ref(true);
  const data: any = ref([]);
@@ -44,6 +44,8 @@ import EmptyState from "../../Icon/Etc/EmptyState.vue";
          .get(
              route("dashboard.outbound.data.campaign.top-closed", {
                  periode: props.period,
+                 product_id : props.productId,
+                 campaign_id : props.campaignId
              })
          )
          .then((result) => {
@@ -53,7 +55,7 @@ import EmptyState from "../../Icon/Etc/EmptyState.vue";
  };
  
  onMounted(() => {
-    if(props.campaignId){
+    if(props.campaignId || props.productId){
         fetchData();
     }
  });

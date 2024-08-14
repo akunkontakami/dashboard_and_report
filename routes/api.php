@@ -57,9 +57,5 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('campaign/chart-campaign', 'chartCampaign')->name('campaign.chart-campaign');
                     Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('campaign.top-closed');
                     Route::get('campaign/ticket-by-type', 'ticketByTypeCampaign')->name('campaign.ticket-by-type');
-                    
-                    Route::get('product/chart-product', 'chartProduct')->name('product.chart-product');
-                    Route::get('product/top-closed', 'topClosedproductAgent')->name('product.top-closed');
-                    Route::get('product/ticket-by-type', 'ticketByStatusProduct')->name('product.ticket-by-type');
                });
      });
