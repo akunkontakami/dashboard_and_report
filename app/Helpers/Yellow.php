@@ -4,7 +4,9 @@ namespace App\Helpers;
 use DateInterval;
 use DatePeriod;
 use DateTime;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Yellow
 {
@@ -49,5 +51,55 @@ class Yellow
 
           $periode = @$periodeInterval[$periode] ?: 'today';
           return self::createRangeInterval($startDate, $periode);
+     }
+
+     
+     public static function getDurationSlaTimer($objectTimer, $endOrNow)
+     {
+          $solvedDuration = @$objectTimer['solved_duration'] ?: null;
+          if ($solvedDuration) {
+               $type = '';
+               if (Str::contains($solvedDuration, '-')) {
+                    $type = '-';
+                    $solvedDuration = str_replace('-', '', $solvedDuration);
+               }
+               list($hours, $minutes) = explode(':', $solvedDuration);
+               return $type . "{$hours}h:{$minutes}min";
+          }
+
+          $now = Carbon::parse($endOrNow->copy());
+          $startAt = Carbon::parse(@$objectTimer['start_at']);
+          $endAt = Carbon::parse(@$objectTimer['end_at']);
+          // $solvedAt = Carbon::parse(@$objectTimer['solved_at']);
+          $startDuration = @$objectTimer['duration'] ?: null;
+
+          if ($startAt && $startDuration && $now < $startAt) {
+               list($hours, $minutes) = explode(':', $startDuration);
+
+               return "{$hours}h:{$minutes}min";
+          }
+
+          if ($now < $endAt) {
+               // Countdown
+               $diff = $now->diffInMinutes($endAt);
+               $hours = intval($diff / 60);
+               $minutes = intval(fmod($diff, 60));
+               $hours = sprintf('%02d', $hours);
+               $minutes = sprintf('%02d', $minutes);
+
+
+               return "{$hours}h:{$minutes}min";
+          } else {
+               // Countup
+               $diff = $endAt->diffInMinutes($now);
+               $hours = intval($diff / 60);
+               $minutes = intval(fmod($diff, 60));
+               $hours = sprintf('%02d', $hours);
+               $minutes = sprintf('%02d', $minutes);
+               $type = $diff == 0 ? '' : '-';
+
+
+               return $type . "{$hours}h:{$minutes}min";
+          }
      }
 }

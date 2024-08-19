@@ -1,0 +1,135 @@
+<?php
+namespace App\Service\Ticket;
+
+use App\Models\Ticket\Ticket;
+use Illuminate\Support\Facades\DB;
+
+class ReportTicketService
+{
+     public function __construct(
+          private $model = Ticket::class,
+     ) {
+     }
+
+     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = 10)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $modify_start = @$filter['modify_start'];
+          $modify_end = @$filter['modify_end'];
+          $origins = @$filter['origins'];
+          $category = @$filter['category'];
+          $helpdesk_id = @$filter['helpdesk_id'];
+          $status = @$filter['status'];
+          $agent_id = @$filter['agent_id'];
+          $spv_id = @$filter['spv_id'];
+          $product_name = @$filter['product_name'];
+          $last_handle = @$filter['last_handle'];
+          $escalation_id = @$filter['escalation_id'];
+          $priority = @$filter['priority'];
+          $division_sla = @$filter['division_sla'];
+          $ticket_sla = @$filter['ticket_sla'];
+          $campaign_id = @$filter['campaign_id'];
+          $new_data = @$filter['new_data'];
+          $response_time = @$filter['response_time'];
+          $broadcast_response = strtolower(@$filter['broadcast_response'] ?: '');
+
+          $relations = [];
+          if ((!$created_start && !$created_end) && (!$modify_start && !$modify_end)) {
+               return [];
+          }
+          if ($type === 'inbound') {
+               $relations = ['helpdesk:id,name'];
+          } else {
+               $relations = ['campaign:id,name'];
+          }
+
+
+          $query = $this->model::query()
+               ->with([
+                    'product:id,name',
+                    'subject:id,name',
+                    'escalationTeam:id,name',
+                    'agent' => fn($query) => $query->where('company_users.company_id', $companyId)->select(['users.id', 'company_users.name', 'company_users.code']),
+                    'spv' => fn($query) => $query->where('company_users.company_id', $companyId)->select(['users.id', 'company_users.name']),
+                    ...$relations
+               ])
+               ->leftJoin('company_customer_contacts as c', function ($join) {
+                    $join->on('c.customer_id', 'tickets.customer_id');
+                    $join->on('c.company_id', 'tickets.company_id');
+               })
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoin('users as u', function ($join) {
+                    $join->on('u.id', 'tickets.customer_id');
+                    $join->where('u.role', 'customer');
+               })
+               ->filterBroadcasted($broadcast_response)
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.is_bucket', 0)
+               ->when($created_start && $created_end, fn($query) => $query->whereBetween('tickets.created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"]))
+               ->when($modify_start && $modify_end, fn($query) => $query->whereBetween('tickets.ticket_date', [$modify_start . " 00:00:00", $modify_end . " 23:59:59"]))
+               ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
+               ->when($status, fn($query) => $query->whereIn('tickets.status', $status))
+               ->when($category, fn($query) => $query->whereIn('tickets.product_category', $category))
+               ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
+               ->filterAgent($agent_id, $companyId, $userId, $userRole, $type, $escalationType)
+               ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
+                    $query->whereIn('tickets.helpdesk_id', $helpdesk_id);
+               })
+               ->when($campaign_id, fn($query) => $query->whereIn('tickets.marketing_campaign_id', $campaign_id))
+               ->when($product_name, fn($query) => $query->whereIn('tickets.product_name', $product_name))
+               ->when($priority, fn($query) => $query->whereIn('tickets.priority', $priority))
+               ->when($last_handle, fn($query) => $query->whereIn('tickets.last_agent_id', $last_handle))
+               ->when($escalation_id, fn($query) => $query->whereIn('tickets.escalation_team_id', $escalation_id))
+               ->when($new_data, fn($query) => $query->where('tickets.status', 'New'))
+               ->filterTicketSla($ticket_sla)
+               ->filterDivisionSla($division_sla)
+               ->filterResponseTimeSla($response_time)
+               ->search($search)
+               ->select([
+                    'tickets.ticket_date as updated_at',
+                    'tickets.created_at',
+                    'tickets.source as call_origin',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+                    'tickets.product_category',
+                    'tickets.product_name',
+                    'tickets.product_id',
+                    'tickets.status',
+                    'tickets.current_agent_id',
+                    'tickets.spv_id',
+                    'tickets.subject_id',
+                    'tickets.priority',
+                    'tickets.sla_resolution_time',
+                    'tickets.sla_response_time',
+                    'tickets.sla_division',
+                    'tickets.escalation_team_id',
+                    'tickets.status_id',
+                    'tickets.status_table',
+                    'st.status_category',
+                    'tickets.note',
+                    'tickets.remark',
+                    'tickets.helpdesk_id',
+                    'tickets.marketing_campaign_id',
+                    'tickets.is_broadcasted',
+                    'tickets.outbound_data_upload_bucket_id',
+                    DB::raw("ifnull(c.email,u.email) as customer_email")
+               ])
+               ->groupBy([
+                    'tickets.ticket_number',
+               ])
+               ->orderByRaw('tickets.ticket_date desc,tickets.outbound_data_upload_bucket_id asc,tickets.id asc');
+          return  $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
+}

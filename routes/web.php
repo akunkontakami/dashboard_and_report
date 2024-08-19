@@ -4,6 +4,8 @@ use App\Http\Controllers\Auth\AuthLoginController;
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\Dashboard\InboundDashboardController;
 use App\Http\Controllers\Dashboard\OutboundDashboardController;
+use App\Http\Controllers\Report\InboundReportController;
+use App\Http\Controllers\Report\OutboundReportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,4 +38,6 @@ Route::middleware(['me-auth', 'idle-logout'])
           Route::get("/dashboard/inbound/{type}", [InboundDashboardController::class, "index"])->name("dashboard.inbound.index")->whereIn('type', ['live-daily', 'kpi']);
           Route::get("/dashboard/outbound/{type}", [OutboundDashboardController::class, "index"])->name("dashboard.outbound.index")->whereIn('type', ['marketing-campaign', 'product']);
 
+          Route::get('/report/inbound/{category}', [InboundReportController::class, 'index'])->name('report.inbound.index');
+          Route::get('/report/outbound/{category}', [OutboundReportController::class, 'index'])->name('report.outbound.index');
      });

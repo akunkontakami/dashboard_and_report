@@ -10,46 +10,46 @@
     <div
         class="relative mb-2"
         x-data="{
-            input: $el.getAttribute('data-value'),
-            itemsDropdownOpen:false,
-            position : {
-                x:0,
-                y:0,
-                width : '100px'
-            },
-            openDropdown(react){
-                 this.position = {
-                     x: `${react.x}px`,
-                     y: `${react.y+47}px`,
-                     width: `${react.width}px`,
-                 }
-                 this.itemsDropdownOpen=!this.itemsDropdownOpen
-            }
+             input: $el.getAttribute('data-value'),
+             marketingCampaignDropdownOpen:false,
+             position : {
+                 x:0,
+                 y:0,
+                 width : '100px'
+             },
+             openDropdown(react){
+                  this.position = {
+                      x: `${react.x}px`,
+                      y: `${react.y+47}px`,
+                      width: `${react.width}px`,
+                  }
+                  this.marketingCampaignDropdownOpen=!this.marketingCampaignDropdownOpen
+             }
          }"
         :data-value="$attrs.value || ''"
         v-bind:class="{ 'has-error': error }"
     >
         <div
             class="border rounded-lg placeholder:text-[#615e5e] px-4 text-[12px] min-h-[42px] flex gap-2 flex-wrap outline-none py-2 w-full mb-2 items-center"
-            x-ref="multipleSelectDropdown"
+            x-ref="campaignSelect"
         >
             <span
-                class="border px-2 items-center flex rounded-md bg-[#ddd] text-[10px] h-[20px]"
-                x-on:click="itemsDropdownOpen=false"
+                class="border px-2 items-center flex bg-[#ddd] rounded-md text-[10px] h-[20px]"
+                x-on:click="marketingCampaignDropdownOpen=false"
                 v-for="item in (selected as any)"
             >
-                {{ item.value }}
+                {{ item.name }}
                 <i
-                    class="isax icon-close-circle ms-3 cursor-pointer"
+                    class="isax icon-close-circle ms-3 cursor-pointer text-[13px]"
                     @click="removeItem(item.id)"
                 ></i>
             </span>
             <div
-                class="mt-[3px] flex-1 h-full min-w-[100px] cursor-pointer whitespace-nowrap overflow-hidden"
+                class="mt-[3px] flex-1 h-full min-w-[100px] cursor-pointer overflow-hidden whitespace-nowrap"
                 x-on:click="openDropdown($el.parentElement.getBoundingClientRect())"
                 v-bind:class="{ 'text-[#ddd]': selected.length }"
             >
-                {{ placeholder }}
+                Choose Marketing Campaign
             </div>
         </div>
         <i
@@ -61,14 +61,14 @@
             </p>
         </div>
         <div
-            class="fixed w-full z-10 mt-1"
+            class="fixed w-full z-[11]"
             x-transition:enter="transition ease-out duration-50"
             x-transition:enter-start="opacity-0 -translate-y-1"
             x-transition:enter-end="opacity-100"
-            x-show="itemsDropdownOpen"
-            x-on:click.away="itemsDropdownOpen = false"
-            x-bind:style="{ top: position.y, left : position.x,width : position.width}"
-            x-anchor.bottom-start="$refs.multipleSelectDropdown"
+            x-show="marketingCampaignDropdownOpen"
+            x-on:click.away="marketingCampaignDropdownOpen = false"
+            v-bind:class="{ 'mt-2': help }"
+            x-anchor.bottom-start="$refs.campaignSelect"
         >
             <div
                 class="bg-white border rounded-lg w-full max-h-60 p-2 flex flex-col"
@@ -78,23 +78,23 @@
                         type="text"
                         v-model="search"
                         class="border w-full text-[11px] mb-2 font-krub-medium rounded-lg py-1"
-                        placeholder="Search items"
+                        placeholder="Search Marketing Campaign"
                     />
                 </div>
                 <ul class="flex-1 overflow-auto">
                     <li v-for="item in itemList" :key="item.id">
                         <a
                             href="javascript:;"
-                            class="flex gap-3 p-[5px] px-2 rounded-md hover:bg-[#dddddd52] text-[11px] text-dark"
-                            x-on:click="itemsDropdownOpen=false"
+                            class="flex gap-3 p-[5px] px-2 rounded-md hover:bg-[#dddddd52] text-[11px] text-[#7B7B7B]"
+                            x-on:click="marketingCampaignDropdownOpen=false"
                             @click="addItem(item)"
                         >
-                            <span v-html="item.html" v-if="item.html"></span>
-                            <span v-else>{{ item.value }}</span>
+                            {{ item.name }}
                         </a>
                     </li>
                 </ul>
             </div>
+            <br /><br />
         </div>
         <small
             v-if="error"
@@ -118,13 +118,12 @@ const props = defineProps<{
     help?: string;
     error?: string;
     id?: string;
-    items: Array<any>;
+    campaigns: Array<any>;
     selected?: Array<any>;
-    placeholder?: string;
 }>();
 
 const search = ref("");
-const itemList = ref(props.items);
+const itemList = ref(props.campaigns);
 const selected = ref([]);
 
 const addItem = (row: any) => {
@@ -132,7 +131,7 @@ const addItem = (row: any) => {
     if (!selectedIds.includes(row.id)) {
         (selected.value as any).push({
             id: row.id,
-            value: row.value,
+            name: row.name,
         });
         emit(
             "update:modelValue",
@@ -149,33 +148,35 @@ const removeItem = (id: string) => {
     );
 };
 
-onMounted(() => {
+const setSelectedItem = () => {
     if (props.selected) {
         const itemSelected: any = [];
         const selectedId = JSON.parse(JSON.stringify(props.selected));
-        props.items.forEach((row: any) => {
+        props.campaigns.forEach((row: any) => {
             if (selectedId.includes(row.id)) {
                 itemSelected.push({
                     id: row.id,
-                    value: row.value,
+                    name: row.name,
                 });
             }
-            row.sub.forEach((key: any) => {
-                if (selectedId.includes(key.id)) {
-                    itemSelected.push({
-                        id: key.id,
-                        value: key.value,
-                    });
-                }
-            });
         });
         selected.value = itemSelected;
     }
+};
+onMounted(() => {
+    setSelectedItem();
 });
 watch(search, (newValue, oldValue) => {
     const searchValue = newValue.toLowerCase();
-    itemList.value = props.items?.filter(function (row) {
-        return row.value.toLowerCase().includes(searchValue);
+    itemList.value = props.campaigns?.filter(function (row) {
+        return row.name.toLowerCase().includes(searchValue);
     });
 });
+
+watch(
+    () => props.selected,
+    (val, value) => {
+        setSelectedItem();
+    }
+);
 </script>

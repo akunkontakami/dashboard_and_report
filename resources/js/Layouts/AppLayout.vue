@@ -38,8 +38,8 @@ const menus = ref([
     },
     {
         name: "Report",
-        route: "",
-        active: "contact.*",
+        route: route("report.inbound.index","ticket-list"),
+        active: "report.*",
         icon: shallowRef(IconMenuReport),
         enable: true,
         show: true,
