@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Service\Utility\BillingService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -32,6 +33,7 @@ class HandleInertiaRequests extends Middleware
         $session = user();
         $flashProperties = [];
         $authProperties = [];
+        $billing = null;
 
         if ($errorFlash = $request->session()->get('error')) {
             $flashProperties['error'] = $errorFlash;
@@ -43,6 +45,8 @@ class HandleInertiaRequests extends Middleware
             $authProperties['user'] = [
                 ...collect($session),
             ];
+            $billing = (new BillingService)->findActiveCompanyBilling($session->company_id);
+            $request->merge(['RequestBilling' => $billing]);
         }
 
 

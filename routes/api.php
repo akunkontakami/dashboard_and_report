@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\AuthLoginController;
 use App\Http\Controllers\Dashboard\InboundDashboardController;
 use App\Http\Controllers\Dashboard\OutboundDashboardController;
+use App\Http\Controllers\Report\InboundReportController;
+use App\Http\Controllers\Report\OutboundReportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -27,7 +29,6 @@ Route::controller(AuthLoginController::class)
 Route::middleware(['me-auth', 'idle-logout'])
      ->group(function () {
           Route::get('/logout', [AuthLoginController::class, 'logout'])->name('auth.logout');
-
 
           Route::controller(InboundDashboardController::class)
                ->as('dashboard.inbound.data.')
@@ -58,4 +59,22 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('campaign.top-closed');
                     Route::get('campaign/ticket-by-type', 'ticketByTypeCampaign')->name('campaign.ticket-by-type');
                });
+
+
+          Route::controller(InboundReportController::class)
+               ->as('report.inbound.')
+               ->prefix('/report/inbound/{category}')
+               ->group(function () {
+                    Route::get('data-table', 'datatable')->name('data-table');
+                    Route::post('export', 'export')->name('export');
+               });
+
+          Route::controller(OutboundReportController::class)
+               ->as('report.outbound.')
+               ->prefix('/report/outbound/{category}')
+               ->group(function () {
+                    Route::get('data-table', 'datatable')->name('data-table');
+                    Route::post('export', 'export')->name('export');
+               });
+
      });
