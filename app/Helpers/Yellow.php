@@ -53,7 +53,6 @@ class Yellow
           return self::createRangeInterval($startDate, $periode);
      }
 
-     
      public static function getDurationSlaTimer($objectTimer, $endOrNow)
      {
           $solvedDuration = @$objectTimer['solved_duration'] ?: null;
@@ -64,7 +63,9 @@ class Yellow
                     $solvedDuration = str_replace('-', '', $solvedDuration);
                }
                list($hours, $minutes) = explode(':', $solvedDuration);
-               return $type . "{$hours}h:{$minutes}min";
+               $hours = str_pad($hours,2,"0",STR_PAD_LEFT);
+               $minutes = str_pad($minutes,2,"0",STR_PAD_LEFT);
+               return $type . "{$hours}h{$minutes}min";
           }
 
           $now = Carbon::parse($endOrNow->copy());
@@ -76,7 +77,9 @@ class Yellow
           if ($startAt && $startDuration && $now < $startAt) {
                list($hours, $minutes) = explode(':', $startDuration);
 
-               return "{$hours}h:{$minutes}min";
+               $hours = str_pad($hours,2,"0",STR_PAD_LEFT);
+               $minutes = str_pad($minutes,2,"0",STR_PAD_LEFT);
+               return "{$hours}h{$minutes}min";
           }
 
           if ($now < $endAt) {
@@ -88,7 +91,9 @@ class Yellow
                $minutes = sprintf('%02d', $minutes);
 
 
-               return "{$hours}h:{$minutes}min";
+               $hours = str_pad($hours,2,"0",STR_PAD_LEFT);
+               $minutes = str_pad($minutes,2,"0",STR_PAD_LEFT);
+               return "{$hours}h{$minutes}min";
           } else {
                // Countup
                $diff = $endAt->diffInMinutes($now);
@@ -99,7 +104,10 @@ class Yellow
                $type = $diff == 0 ? '' : '-';
 
 
-               return $type . "{$hours}h:{$minutes}min";
+               $hours = str_pad($hours,2,"0",STR_PAD_LEFT);
+               $minutes = str_pad($minutes,2,"0",STR_PAD_LEFT);
+               return $type . "{$hours}h{$minutes}min";
           }
      }
+
 }
