@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Report;
 
 use App\Enum\Role;
+use App\Http\Resources\Report\CallTrackingReportResource;
 use App\Http\Resources\Report\TicketListReportResource;
 use App\Service\Ticket\ReportTicketService;
 use App\Service\Ticket\TicketService;
@@ -42,10 +43,11 @@ trait ReportController
 
 
      private function getDataTable(Request $request,$category,$paginate = true){
+          $service = new ReportTicketService;
           $user = user();
           $items = [];
           if ($category === 'ticket-list') {
-               $data = (new ReportTicketService)->findAllTicketListReportData(
+               $data = $service->findAllTicketListReportData(
                     user : $user,
                     filter : $request->get('filter',[]),
                     search : $request->search,
@@ -53,6 +55,17 @@ trait ReportController
                     paginate : $paginate
                );
                $items = TicketListReportResource::collection($data);
+          }
+
+          if($category=='call-tracking'){
+               $data =  $service->findAllCallTrackingReportData(
+                    user : $user,
+                    filter : $request->get('filter',[]),
+                    search : $request->search,
+                    type : $this->type,
+                    paginate : $paginate
+               );
+               $items = CallTrackingReportResource::collection($data);
           }
 
           return $items;
@@ -74,8 +87,14 @@ trait ReportController
                $productList = $this->ticketService->findAllProductTicket($user, $this->type);
                $escalations = $this->marketingCampaignService->findAllEscalationUser($user,$this->type);
           }
-          if (in_array($category, ["call-tracking", "ticket-list"])) {
+          if($category=='ticket-list'){
                $status = $this->ticketService->findAllStatusTicketWithColor($user, $this->type);
+          }else if($category=='call-tracking'){
+               if($this->type=='outbound'){
+                    $status = $this->ticketService->findAllStatusTicketWithColor($user, $this->type);
+               }else{
+                    $status = $this->ticketService->findAllInboundStatus($user->company_id);
+               }
           } else if ($category == 'call-agent') {
                $status = ['Incoming Call', 'Outgoing Call', 'Missed Call', 'Callback', 'Outgoing Campaign'];
           }

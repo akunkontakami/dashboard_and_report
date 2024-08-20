@@ -13,8 +13,10 @@ use App\Models\Util\Product;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Ticket extends Model
 {
@@ -46,7 +48,7 @@ class Ticket extends Model
         return $this->belongsTo(EscalationTeam::class, 'escalation_team_id');
     }
 
-    
+
     public function agent(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'current_agent_id')
@@ -59,7 +61,7 @@ class Ticket extends Model
             ->join('company_users', 'company_users.user_id', 'users.id');
     }
 
-    
+
     public function campaign()
     {
         return $this->belongsTo(MarketingCampaign::class, 'marketing_campaign_id');
@@ -69,6 +71,29 @@ class Ticket extends Model
     public function helpdesk(): HasOne
     {
         return $this->hasOne(HelpdeskCategory::class, 'id', 'helpdesk_id');
+    }
+
+    public function ticketStatus(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'current_agent_id', 'current_agent_id')
+            ->select([
+                'status',
+                'escalation_status',
+                'status_id',
+                'current_agent_id',
+                'type',
+                'company_id',
+                DB::raw("count(distinct id) total")
+            ])
+            ->groupBy([
+                "status",
+                "escalation_status",
+                "status_id",
+                "spv_id",
+                "current_agent_id",
+                "type",
+                "company_id"
+            ]);
     }
 
     public function scopeFilterByCompanyTypeDateRangeAndSource($query, $companyId, $type, $dates, $source = null)
@@ -169,12 +194,12 @@ class Ticket extends Model
         }
     }
 
-    
+
     public function scopeFilterTicketSla($query, $ticketSla)
     {
         if ($ticketSla && count($ticketSla) == 1) {
             // fulfilled or breached
-            if(in_array('fulfilled',$ticketSla)){
+            if (in_array('fulfilled', $ticketSla)) {
                 // masih hijau fulfilled
                 $query->whereRaw("(
                     CASE 
@@ -192,7 +217,7 @@ class Ticket extends Model
                             ), '%H%i')
                     END not like '-%' or tickets.sla_resolution_time is null
                 )");
-            }else{
+            } else {
                 // sudah merah breached
                 $query->whereRaw("CASE 
                     when  JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_resolution_time, '$.solved_duration')) is not null  and JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_resolution_time, '$.solved_duration'))!=''
@@ -217,7 +242,7 @@ class Ticket extends Model
     {
         if ($ticketSla && count($ticketSla) == 1) {
             // fulfilled or breached
-            if(in_array('fulfilled',$ticketSla)){
+            if (in_array('fulfilled', $ticketSla)) {
                 // masih hijau fulfilled
                 $query->whereRaw("(
                     CASE 
@@ -235,7 +260,7 @@ class Ticket extends Model
                             ), '%H%i')
                     END not like '-%' or tickets.sla_division is null
                 ) ");
-            }else{
+            } else {
                 // sudah merah breached
                 $query->whereRaw("CASE 
                     when  JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_division, '$.solved_duration')) is not null and  JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_division, '$.solved_duration')) !=''  

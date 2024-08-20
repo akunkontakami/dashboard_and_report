@@ -99,6 +99,11 @@
             :filter="filter"
             v-if="category === 'ticket-list'"
         />
+        <CallTracking
+            :type="type"
+            :filter="filter"
+            v-if="category === 'call-tracking'"
+        />
     </div>
 </template>
 <script setup lang="ts">
@@ -107,6 +112,7 @@ import ButtonOutlineGrey from "@/Components/Button/ButtonOutlineGrey.vue";
 import DropdownMenu from "@/Components/Dropdown/DropdownMenu.vue";
 import Dropdown from "@/Components/Dropdown/Dropdown.vue";
 import TicketList from "./Data/TicketList.vue";
+import CallTracking from "./Data/CallTracking.vue";
 import { ref } from "vue";
 
 const props = defineProps(["category", "queueLog", "type", "filter"]);

@@ -11,7 +11,7 @@ class ReportTicketService
      ) {
      }
 
-     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = 10)
+     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = null)
      {
           $companyId = $user->company_id;
           $userId = $user->id;
@@ -129,7 +129,80 @@ class ReportTicketService
                     'tickets.ticket_number',
                ])
                ->orderByRaw('tickets.ticket_date desc,tickets.outbound_data_upload_bucket_id asc,tickets.id asc');
-          return  $paginate ? $query->paginate($paginate) : $query->get();
+          return $paginate ? $query->paginate($paginate) : $query->get();
      }
+
+
+     public function findAllCallTrackingReportData($user, $type, $filter, $search, $paginate = null)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+          $totalCustomer = "count(distinct tickets.customer_id) as total_customer";
+          if ($type == 'outbound') {
+               $totalCustomer = "count(distinct tickets.customer_name) as total_customer";
+          }
+
+          $query = $this->model::query()
+               ->with([
+                    'ticketStatus' => function ($query) use ($type, $companyId, $agent_id, $created_start, $created_end) {
+                         $query->whereBetween('ticket_date', [$created_start . " 00:00:00", $created_end . " 23:59:59"]);
+                         $query->where('type', $type);
+                         $query->where('company_id', $companyId);
+                         $query->when($agent_id, fn($filter) => $filter->whereIn('current_agent_id', $agent_id));
+                    }
+               ])
+               ->join('company_users as agent', function ($join) use ($companyId) {
+                    $join->on('agent.user_id', 'tickets.current_agent_id');
+                    $join->where('agent.company_id', $companyId);
+               })
+               ->join('company_users as spv', function ($join) use ($companyId) {
+                    $join->on('spv.user_id', 'tickets.spv_id');
+                    $join->where('spv.company_id', $companyId);
+               })
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->when($search, function ($query) use ($search) {
+                    $query->where('agent.name', 'like', "%{$search}%");
+                    $query->orWhere('spv.name', 'like', "%{$search}%");
+               })
+               ->whereBetween('tickets.ticket_date', [$created_start . " 00:00:00", $created_end . " 23:59:59"])
+               ->when($agent_id, fn($filter) => $filter->whereIn('current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('spv_id', $spv_id))
+               ->filterAgent($agent_id, $companyId, $userId, $userRole, $type, $escalationType)
+               ->select([
+                    'tickets.type',
+                    'tickets.company_id',
+                    'tickets.current_agent_id',
+                    'spv_id',
+                    'agent.name as agent_name',
+                    'agent.code as agent_code',
+                    'spv.name as spv_name',
+                    DB::raw('count(distinct tickets.id) total_ticket'),
+                    DB::raw($totalCustomer),
+               ])
+               ->orderByRaw('count(distinct tickets.id) desc')
+               ->groupBy([
+                    'tickets.company_id',
+                    'tickets.current_agent_id',
+                    'tickets.spv_id',
+                    'tickets.type',
+                    'agent.name',
+                    'agent.code',
+                    'spv.name'
+               ]);
+
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
 
 }

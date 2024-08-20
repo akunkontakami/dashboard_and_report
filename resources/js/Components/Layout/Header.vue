@@ -1,6 +1,6 @@
 <template>
     <header
-        class="bg-white w-full border-b p-4 py-2 z-30 sticky flex flex-col top-0"
+        class="bg-white w-full border-b p-4 py-2 z-[10] sticky flex flex-col top-0"
         v-if="user"
         x-data="{confirmation:false}"
     >
@@ -33,11 +33,8 @@
             </div>
             <ul class="flex gap-2 items-center">
                 <li x-data="{ dropdownProfile: false }">
-                    <button
-                        type="button"
+                    <div
                         class="flex text-end gap-2 items-center"
-                        x-ref="dropdownProfile"
-                        x-on:click="dropdownProfile=true"
                     >
                         <div class="max-w-[250px]">
                             <b
@@ -56,11 +53,11 @@
                             id="header-user-profile"
                             class="w-[30px] h-[30px] rounded-full object-cover border"
                         />
-                        <i
+                        <!-- <i
                             class="isax icon-arrow-down-1 text-[12px] ms-[-4px]"
-                        ></i>
-                    </button>
-                    <div
+                        ></i> -->
+                    </div>
+                    <!-- <div
                         x-show="dropdownProfile"
                         x-clock
                         x-on:click.away="dropdownProfile=false"
@@ -98,7 +95,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> -->
                 </li>
             </ul>
         </div>
