@@ -5,6 +5,7 @@ namespace App\Models\Ticket;
 use App\Enum\Role;
 use App\Models\Account\User;
 use App\Models\Inbound\UserHelpdesk;
+use App\Models\Ticket\TicketHistory;
 use App\Models\Util\CompanyProductSubject;
 use App\Models\Util\EscalationTeam;
 use App\Models\Util\HelpdeskCategory;
@@ -72,6 +73,11 @@ class Ticket extends Model
     public function helpdesk(): HasOne
     {
         return $this->hasOne(HelpdeskCategory::class, 'id', 'helpdesk_id');
+    }
+
+    public function lastHistory(): HasOne
+    {
+        return $this->hasOne(TicketHistory::class, 'ticket_id', 'id')->latest();
     }
 
     public function ticketStatus(): HasMany

@@ -281,6 +281,98 @@ class ReportTicketService
      }
 
 
+     public function findAllFormTicketListReportData($companyId, $type, $filter, $search)
+     {
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $origins = @$filter['origins'];
+          $category = @$filter['category'];
+          $helpdesk_id = @$filter['helpdesk_id'];
+          $campaign_id = @$filter['campaign_id'];
+          $status = @$filter['status'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+
+
+          $relations = [
+               'lastHistory.forms'
+          ];
+          if ($type == 'outbound') {
+               $relations = [
+                    ...$relations,
+                    ...[
+                         'lastHistory.insured',
+                         'lastHistory.beneficiary'
+                    ]
+               ];
+          }
+          return $this->model::query()
+               ->with($relations)
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.is_bucket', 0)
+               ->whereBetween('created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"])
+               ->when(
+                    $search,
+                    fn($q) => $q->where(function ($query) use ($search) {
+                         $query->where('tickets.product_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.customer_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.ticket_number', 'like', "%{$search}%");
+                    })
+               )
+               ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
+               ->when($status, fn($query) => $query->whereIn('tickets.status', $status))
+               ->when($category, fn($query) => $query->whereIn('tickets.product_category', $category))
+               ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
+               ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
+                    $query->whereRelation('product.helpdeskName', fn($query) => $query->whereIn('helpdesk_id', $helpdesk_id));
+               })
+               ->when($campaign_id, function ($query) use ($campaign_id) {
+                    $query->whereRelation('product.campaignName', fn($query) => $query->whereIn('marketing_campaign_id', $campaign_id));
+               })
+               ->select([
+                    'tickets.id',
+                    'tickets.created_at',
+                    'tickets.number_id',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+               ])
+               ->orderBy('tickets.created_at', 'desc')
+               ->get()
+               ->map(function ($items) {
+                    if($items->lastHistory){
+                         $items->form = $items->lastHistory?->forms->groupBy('form_category')->map(function ($row) {
+                              return $row->groupBy('group_name')
+                                   ->map(function ($group) {
+                                        $fields = $group
+                                             ->sortBy('sorting')
+                                             ->each(function ($row) {
+                                                  if ($row->input_type == 'file') {
+                                                       $row->content = asset($row->content);
+                                                  }
+                                             })
+                                             ->values();
+                                        return $fields;
+                                   });
+                         });
+                         $items->insured = $items->lastHistory?->insured;
+                         $items->beneficiary = $items->lastHistory?->beneficiary;
+                         unset($items->lastHistory->forms);
+                         unset($items->lastHistory->insured);
+                         unset($items->lastHistory->beneficiary);                         
+                    }else{
+                         $items->form = [];
+                         $items->insured = [];
+                         $items->beneficiary = [];
+                    }
+                    return $items;
+               });
+     }
+
 
 
 }

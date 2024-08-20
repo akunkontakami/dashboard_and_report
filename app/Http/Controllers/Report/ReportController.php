@@ -2,10 +2,12 @@
 namespace App\Http\Controllers\Report;
 
 use App\Enum\Role;
+use App\Helpers\ExportExcel;
 use App\Http\Resources\Report\AgentActivityReportResource;
 use App\Http\Resources\Report\CallAgentReportResource;
 use App\Http\Resources\Report\CallTrackingReportResource;
 use App\Http\Resources\Report\TicketListReportResource;
+use App\Models\Account\Company;
 use App\Service\Ticket\ReportTicketService;
 use App\Service\Ticket\TicketService;
 use App\Service\Utility\BillingService;
@@ -14,6 +16,7 @@ use App\Service\Utility\HelpdeskCategoryService;
 use App\Service\Utility\MarketingCampaignService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
 
 trait ReportController
 {
@@ -43,10 +46,78 @@ trait ReportController
           return $this->getDataTable($request,$category,$request->get('limit',10));
      }
 
-
-     private function getDataTable(Request $request,$category,$paginate = true){
-          $service = new ReportTicketService;
+     public function export(Request $request,$category){
           $user = user();
+          $company = Company::where('id',$user->company_id)->first();
+          $additionalData = [];
+          $data =  $this->getDataTable($request,$category,null)->resolve();
+          $props = match ($category) {
+                'ticket-list'=> [
+                    'exports.reports.ticket-list',
+                    '"Report Ticket List'
+                ],
+                'call-tracking'=> [
+                    'exports.reports.call-tracking',
+                    'Report Call Tracking'
+                ],
+                'agent-activity'=> [
+                    'exports.reports.agent-activity',
+                    'Report Agent Activity'
+                ],
+                'call-agent'=> [
+                    'exports.reports.call-agent',
+                    'Report Call Agent'
+                ],
+          };
+          $viewName = @$props[0];
+          $fileName = @$props[1];
+          if(!$viewName || !$fileName){
+               return null;
+          }
+
+          if($category== 'call-tracking'){
+               $additionalData = [
+                    'status' => $this->getCallTrackingTicketStatus($user),
+               ];
+          }
+          $filter = $request->get('filter', []);
+          $filename = $fileName . " ".$company->name." " . @$filter['created_start'] . " - " . @$filter['created_end'];
+          return Excel::download(new ExportExcel([
+               'view' => $viewName,
+               'data' => [
+                    'items' => $data,
+                    'type' => $this->type,
+                    ...$additionalData
+               ],
+          ]), "{$filename}.xlsx", \Maatwebsite\Excel\Excel::XLSX, [
+               'filename' => "{$filename}.xlsx",
+          ]);
+     }
+
+     
+     public function exportFormTicket(Request $request, ReportTicketService $reportTicketService)
+     {
+          $user = user();
+          $type = $request->type ?: 'excel';
+          $companyId = $user->company_id;
+          $filter = $request->get('filter', []);
+          $data = $reportTicketService->findAllFormTicketListReportData(
+               companyId: $companyId,
+               type: $this->type,
+               filter: $filter,
+               search: $request->get('search', ''),
+          );
+          // if ($type == 'pdf') {
+          //      return (new ExportFormPDFTicket)->handle($filter, $data, ba(), $this->type);
+          // }else{
+          //      return (new ExportFormExcelTicket)->handle($filter, $data,$this->type);
+          // }
+     }
+
+
+     private function getDataTable(Request $request,$category,$paginate = 10){
+          $user = user();
+          $service = new ReportTicketService;
           $items = [];
           if ($category === 'ticket-list') {
                $data = $service->findAllTicketListReportData(
@@ -96,7 +167,6 @@ trait ReportController
      }
      private function filterProperties($category)
      {
-          // Todo : filter all query data whit user own relation
           $user = user();
           $helpdesk = [];
           $status = [];
@@ -114,11 +184,7 @@ trait ReportController
           if($category=='ticket-list'){
                $status = $this->ticketService->findAllStatusTicketWithColor($user, $this->type);
           }else if($category=='call-tracking'){
-               if($this->type=='outbound'){
-                    $status = $this->ticketService->findAllStatusTicketWithColor($user, $this->type);
-               }else{
-                    $status = $this->ticketService->findAllInboundStatus($user->company_id);
-               }
+               $status = $this->getCallTrackingTicketStatus($user);
           } else if ($category == 'call-agent') {
                $status = ['Incoming Call', 'Outgoing Call', 'Missed Call', 'Callback', 'Outgoing Campaign'];
           }
@@ -137,5 +203,14 @@ trait ReportController
                "productList" => $productList,
                "escalations" => $escalations
           ];
+     }
+
+     private function getCallTrackingTicketStatus($user){
+          if($this->type=='outbound'){
+               $status = $this->ticketService->findAllStatusTicketWithColor($user, $this->type);
+          }else{
+               $status = $this->ticketService->findAllInboundStatus($user->company_id);
+          }
+          return $status;
      }
 }
