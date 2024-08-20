@@ -36,15 +36,20 @@
                     <div
                         class="flex text-end gap-2 items-center"
                     >
-                        <div class="max-w-[250px]">
+                        <div class="max-w-[350px]">
                             <b
                                 class="text-[12px] line-clamp-1"
                                 id="header-user-name"
                             >
                                 {{ user.name }}
                             </b>
-                            <p class="text-yellow text-[9px]">
-                                {{ roleUser[user.role as string] }}
+                            <p class="text-[9px]">
+                                <span v-if="user.company_name">
+                                    {{user.company_name}} - 
+                                </span>
+                                <span class="text-yellow">
+                                    {{ roleUser[user.role as string] }}
+                                </span>
                             </p>
                         </div>
                         <img

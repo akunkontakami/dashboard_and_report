@@ -3,6 +3,7 @@
 namespace App\Models\Account;
 
 use App\Enum\StatusEnum;
+use App\Models\Account\CompanyProfile;
 use App\Models\Account\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -23,6 +24,11 @@ class CompanyUser extends Model
     public function user(): HasOne
     {
         return $this->hasOne(User::class, 'id', 'user_id');
+    }
+
+    public function companyProfile(): HasOne
+    {
+        return $this->hasOne(CompanyProfile::class, 'company_id', 'company_id');
     }
 
 }

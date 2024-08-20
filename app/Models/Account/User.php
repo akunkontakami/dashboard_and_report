@@ -2,6 +2,7 @@
 
 namespace App\Models\Account;
 
+use App\Enum\Role;
 use App\Models\Account\CompanyUser;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,8 +19,7 @@ class User extends Model
     protected $guarded = [];
 
     protected $hidden = ['password'];
-
-    public $casts = [
+    protected $casts = [
         'role' => Role::class
     ];
 
