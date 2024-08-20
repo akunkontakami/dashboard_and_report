@@ -28,6 +28,9 @@ const chartConfig = {
         chart: {
             type: "bar",
             stacked: true,
+            toolbar: {
+                show: false
+            }
         },
         plotOptions: {
             bar: {

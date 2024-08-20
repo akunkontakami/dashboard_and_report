@@ -111,6 +111,9 @@ const webCallBadges = ref([["#F94144", "Missed Call"]]);
 const chartOptions = ref({
     chart: {
         type: "donut",
+        toolbar: {
+            show: false
+        }
     },
     legend: {
         show: false,

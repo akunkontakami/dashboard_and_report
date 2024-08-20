@@ -39,7 +39,7 @@ import EmptyState from "../../Icon/Etc/EmptyState.vue";
 import axios from "axios";
 import { ref, onMounted, watch } from "vue";
 
-const props = defineProps(["period","campaignId","productId"]);
+const props = defineProps(["period", "campaignId", "productId"]);
 const loading = ref(true);
 const haveData = ref(false);
 const chart: any = ref(null);
@@ -56,6 +56,9 @@ const chartConfig = {
     options: {
         chart: {
             type: "bar",
+            toolbar: {
+                show: false,
+            },
         },
         plotOptions: {
             bar: {
@@ -107,14 +110,14 @@ const fetchData = () => {
         .get(
             route("dashboard.outbound.data.campaign.chart-campaign", {
                 periode: props.period,
-                campaign_id : props.campaignId,
-                product_id : props.productId
+                campaign_id: props.campaignId,
+                product_id: props.productId,
             })
         )
         .then((result) => {
-            const data = result.data
+            const data = result.data;
             const items = data.items;
-            higher.value = data.higher
+            higher.value = data.higher;
             loading.value = false;
             chartConfig.series[0] = {
                 name: "Total",
@@ -133,7 +136,7 @@ const fetchData = () => {
 };
 
 onMounted(() => {
-    if(props.campaignId || props.productId){
+    if (props.campaignId || props.productId) {
         fetchData();
     }
 });
