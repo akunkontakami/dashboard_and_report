@@ -77,4 +77,19 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::post('export', 'export')->name('export');
                });
 
+          Route::controller(InboundReportController::class)
+               ->as('report.inbound.')
+               ->prefix('/report/inbound/ticket')
+               ->group(function () {
+                    Route::post('export-form', 'exportFormTicket')->name('ticket.export-form');
+                    Route::post('export-chat', 'exportChatTicket')->name('ticket.export-chat');
+                    Route::get('download-form/{queue_id}', 'downloadFormTicketPdf')->name('ticket.export-form.download');
+               });
+          Route::controller(OutboundReportController::class)
+               ->as('report.outbound.')
+               ->prefix('/report/outbound/ticket')
+               ->group(function () {
+                    Route::post('export-form', 'exportFormTicket')->name('ticket.export-form');
+                    Route::post('export-chat', 'exportChatTicket')->name('ticket.export-chat');
+               });
      });

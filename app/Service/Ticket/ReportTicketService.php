@@ -1,6 +1,9 @@
 <?php
 namespace App\Service\Ticket;
 
+use App\Enum\Role;
+use App\Models\Ticket\AgentActivity;
+use App\Models\Ticket\CallAgent;
 use App\Models\Ticket\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -11,12 +14,12 @@ class ReportTicketService
      ) {
      }
 
-     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = 10)
+     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = null)
      {
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           $created_start = @$filter['created_start'];
           $created_end = @$filter['created_end'];
@@ -129,7 +132,247 @@ class ReportTicketService
                     'tickets.ticket_number',
                ])
                ->orderByRaw('tickets.ticket_date desc,tickets.outbound_data_upload_bucket_id asc,tickets.id asc');
-          return  $paginate ? $query->paginate($paginate) : $query->get();
+          return $paginate ? $query->paginate($paginate) : $query->get();
      }
+
+
+     public function findAllCallTrackingReportData($user, $type, $filter, $search, $paginate = null)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+          $totalCustomer = "count(distinct tickets.customer_id) as total_customer";
+          if ($type == 'outbound') {
+               $totalCustomer = "count(distinct tickets.customer_name) as total_customer";
+          }
+
+          $query = $this->model::query()
+               ->with([
+                    'ticketStatus' => function ($query) use ($type, $companyId, $agent_id, $created_start, $created_end) {
+                         $query->whereBetween('ticket_date', [$created_start . " 00:00:00", $created_end . " 23:59:59"]);
+                         $query->where('type', $type);
+                         $query->where('company_id', $companyId);
+                         $query->when($agent_id, fn($filter) => $filter->whereIn('current_agent_id', $agent_id));
+                    }
+               ])
+               ->join('company_users as agent', function ($join) use ($companyId) {
+                    $join->on('agent.user_id', 'tickets.current_agent_id');
+                    $join->where('agent.company_id', $companyId);
+               })
+               ->join('company_users as spv', function ($join) use ($companyId) {
+                    $join->on('spv.user_id', 'tickets.spv_id');
+                    $join->where('spv.company_id', $companyId);
+               })
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->when($search, function ($query) use ($search) {
+                    $query->where('agent.name', 'like', "%{$search}%");
+                    $query->orWhere('spv.name', 'like', "%{$search}%");
+               })
+               ->whereBetween('tickets.ticket_date', [$created_start . " 00:00:00", $created_end . " 23:59:59"])
+               ->when($agent_id, fn($filter) => $filter->whereIn('current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('spv_id', $spv_id))
+               ->filterAgent($agent_id, $companyId, $userId, $userRole, $type, $escalationType)
+               ->select([
+                    'tickets.type',
+                    'tickets.company_id',
+                    'tickets.current_agent_id',
+                    'spv_id',
+                    'agent.name as agent_name',
+                    'agent.code as agent_code',
+                    'spv.name as spv_name',
+                    DB::raw('count(distinct tickets.id) total_ticket'),
+                    DB::raw($totalCustomer),
+               ])
+               ->orderByRaw('count(distinct tickets.id) desc')
+               ->groupBy([
+                    'tickets.company_id',
+                    'tickets.current_agent_id',
+                    'tickets.spv_id',
+                    'tickets.type',
+                    'agent.name',
+                    'agent.code',
+                    'spv.name'
+               ]);
+
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
+     public function findAllAgentActivityReportData($user, $filter, $search, $type, $paginate)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $agent_id = @$filter['agent_id'];
+          $roles = @$filter['roles'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+
+          $query = AgentActivity::query()
+               ->where('view_report_agent_activity.company_id', $companyId)
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->when($search, function ($query) use ($search) {
+                    $query->where('view_report_agent_activity.name', 'like', "%{$search}%");
+               })
+               ->whereBetween('date', [$created_start, $created_end])
+               ->select([
+                    'view_report_agent_activity.*',
+                    DB::raw("'{$type}' as type_category")
+               ])
+               ->when($agent_id, fn($query) => $query->whereIn('user_id', $agent_id))
+               ->when($roles, fn($query) => $query->whereIn('role', $roles));
+
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
+
+     public function findAllCallAgentReportData($user, $filter, $search, $type, $paginate)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+
+          $query = CallAgent::query()
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->joinSpv($userRole, $companyId, $type, $escalationType)
+               ->where('view_report_call_agent.company_id', $companyId)
+               ->whereBetween('view_report_call_agent.date', [$created_start, $created_end])
+               ->when($agent_id, fn($filter) => $filter->whereIn('agent_id', $agent_id))
+               ->when($type == 'inbound', fn($query) => $query->whereNull('view_report_call_agent.sip'))
+               ->when($type == 'outbound', fn($query) => $query->whereNotNull('view_report_call_agent.sip'))
+               ->when($search, function ($query) use ($search) {
+                    $query->where('view_report_call_agent.agent_name', 'like', "%{$search}%");
+               })
+               ->select(
+                    'view_report_call_agent.*',
+                    'company_users.name as spv_name',
+                    'company_users.code as spv_code',
+                    DB::raw("'{$type}' as type_filter")
+               )
+               ->groupBy([
+                    'view_report_call_agent.agent_id',
+                    'view_report_call_agent.date',
+               ])
+               ->orderBy('date', 'desc');
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
+
+     public function findAllFormTicketListReportData($companyId, $type, $filter, $search)
+     {
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $origins = @$filter['origins'];
+          $category = @$filter['category'];
+          $helpdesk_id = @$filter['helpdesk_id'];
+          $campaign_id = @$filter['campaign_id'];
+          $status = @$filter['status'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+
+
+          $relations = [
+               'lastHistory.forms'
+          ];
+          if ($type == 'outbound') {
+               $relations = [
+                    ...$relations,
+                    ...[
+                         'lastHistory.insured',
+                         'lastHistory.beneficiary'
+                    ]
+               ];
+          }
+          return $this->model::query()
+               ->with($relations)
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.is_bucket', 0)
+               ->whereBetween('created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"])
+               ->when(
+                    $search,
+                    fn($q) => $q->where(function ($query) use ($search) {
+                         $query->where('tickets.product_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.customer_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.ticket_number', 'like', "%{$search}%");
+                    })
+               )
+               ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
+               ->when($status, fn($query) => $query->whereIn('tickets.status', $status))
+               ->when($category, fn($query) => $query->whereIn('tickets.product_category', $category))
+               ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
+               ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
+                    $query->whereRelation('product.helpdeskName', fn($query) => $query->whereIn('helpdesk_id', $helpdesk_id));
+               })
+               ->when($campaign_id, function ($query) use ($campaign_id) {
+                    $query->whereRelation('product.campaignName', fn($query) => $query->whereIn('marketing_campaign_id', $campaign_id));
+               })
+               ->select([
+                    'tickets.id',
+                    'tickets.created_at',
+                    'tickets.number_id',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+               ])
+               ->orderBy('tickets.created_at', 'desc')
+               ->get()
+               ->map(function ($items) {
+                    if($items->lastHistory){
+                         $items->form = $items->lastHistory?->forms->groupBy('form_category')->map(function ($row) {
+                              return $row->groupBy('group_name')
+                                   ->map(function ($group) {
+                                        $fields = $group
+                                             ->sortBy('sorting')
+                                             ->each(function ($row) {
+                                                  if ($row->input_type == 'file') {
+                                                       $row->content = asset($row->content);
+                                                  }
+                                             })
+                                             ->values();
+                                        return $fields;
+                                   });
+                         });
+                         $items->insured = $items->lastHistory?->insured;
+                         $items->beneficiary = $items->lastHistory?->beneficiary;
+                         unset($items->lastHistory->forms);
+                         unset($items->lastHistory->insured);
+                         unset($items->lastHistory->beneficiary);                         
+                    }else{
+                         $items->form = [];
+                         $items->insured = [];
+                         $items->beneficiary = [];
+                    }
+                    return $items;
+               });
+     }
+
+
 
 }

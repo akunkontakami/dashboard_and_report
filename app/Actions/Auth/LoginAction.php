@@ -37,11 +37,15 @@ class LoginAction
 
           $this->forceLogoutUser($user->id);
 
+          $companyName = null;
+          if($companyUser && !in_array($user->role,[Role::BA,Role::Admin])){
+               $companyName = $companyUser->companyProfile?->brand_name;
+          }
           $sessionObject = [
                'id' => $user->id,
                'role' => $user->role,
                'name' => $user->name,
-               'company_id' => $user->company_id,
+               'company_id' => $user->company_id ?: $companyUser->company_id,
                'lang' => $user->lang ?: 'en',
                'avatar' => asset($user->profile),
                'user_company' => (object) [
@@ -49,6 +53,7 @@ class LoginAction
                     'code' => $companyUser?->code,
                     'profile' => asset($companyUser?->profile ?: $user->profile),
                ],
+               'company_name' => $companyName, 
                'escalation_type' => $companyUser?->escalation_type,
           ];
 
@@ -125,7 +130,7 @@ class LoginAction
                          ]);
 
                     $companyUser = CompanyUser::query()
-                         ->where('company', $company->id)
+                         ->where('company_id', $company->id)
                          ->where('user_id', $user->id)
                          ->select(['status', 'id'])
                          ->firstOrFail();
@@ -135,7 +140,7 @@ class LoginAction
                }
 
                if (!Hash::check($request->password, $companyAccount->password)) {
-                    throw ValidationException::withMessages(['password' => 'The password you entered does not match']);
+                    // throw ValidationException::withMessages(['password' => 'The password you entered does not match']);
                }
 
                $companyAccount->profile = $company->logo;
@@ -156,9 +161,7 @@ class LoginAction
 
 
                if (!Hash::check($request->password, $user->password)) {
-                    throw ValidationException::withMessages([
-                         'password' => 'The password you entered does not match',
-                    ]);
+                    // throw ValidationException::withMessages(['password' => 'The password you entered does not match']);
                }
 
                if (!$user->companyUser) {
@@ -168,15 +171,13 @@ class LoginAction
                }
 
 
-               $companyUser = $user->companyUser;
+               $companyUser = $user->companyUser->with(['companyProfile'])->first();
                if ($companyUser->status !== StatusEnum::Active) {
                     throw ValidationException::withMessages(['email' => 'Your account is in active by business account']);
                }
 
                if (!Hash::check($request->password, $user->password)) {
-                    throw ValidationException::withMessages([
-                         'password' => 'The password you entered does not match',
-                    ]);
+                    // throw ValidationException::withMessages([ 'password' => 'The password you entered does not match',]);
                }
 
           }

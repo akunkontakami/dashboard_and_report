@@ -1,6 +1,6 @@
 <template>
     <header
-        class="bg-white w-full border-b p-4 py-2 z-30 sticky flex flex-col top-0"
+        class="bg-white w-full border-b p-4 py-2 z-[10] sticky flex flex-col top-0"
         v-if="user"
         x-data="{confirmation:false}"
     >
@@ -33,21 +33,23 @@
             </div>
             <ul class="flex gap-2 items-center">
                 <li x-data="{ dropdownProfile: false }">
-                    <button
-                        type="button"
+                    <div
                         class="flex text-end gap-2 items-center"
-                        x-ref="dropdownProfile"
-                        x-on:click="dropdownProfile=true"
                     >
-                        <div class="max-w-[250px]">
+                        <div class="max-w-[350px]">
                             <b
                                 class="text-[12px] line-clamp-1"
                                 id="header-user-name"
                             >
                                 {{ user.name }}
                             </b>
-                            <p class="text-yellow text-[9px]">
-                                {{ roleUser[user.role as string] }}
+                            <p class="text-[9px]">
+                                <span v-if="user.company_name">
+                                    {{user.company_name}} - 
+                                </span>
+                                <span class="text-yellow">
+                                    {{ roleUser[user.role as string] }}
+                                </span>
                             </p>
                         </div>
                         <img
@@ -56,11 +58,11 @@
                             id="header-user-profile"
                             class="w-[30px] h-[30px] rounded-full object-cover border"
                         />
-                        <i
+                        <!-- <i
                             class="isax icon-arrow-down-1 text-[12px] ms-[-4px]"
-                        ></i>
-                    </button>
-                    <div
+                        ></i> -->
+                    </div>
+                    <!-- <div
                         x-show="dropdownProfile"
                         x-clock
                         x-on:click.away="dropdownProfile=false"
@@ -98,7 +100,7 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
+                    </div> -->
                 </li>
             </ul>
         </div>

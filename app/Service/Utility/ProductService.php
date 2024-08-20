@@ -16,7 +16,7 @@ class ProductService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           return $this->model::query()
                ->where('company_id', $companyId)
                ->where('type', $type)

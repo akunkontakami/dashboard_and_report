@@ -99,6 +99,21 @@
             :filter="filter"
             v-if="category === 'ticket-list'"
         />
+        <CallTracking
+            :type="type"
+            :filter="filter"
+            v-if="category === 'call-tracking'"
+        />
+        <AgentActivity
+            :type="type"
+            :filter="filter"
+            v-if="category === 'agent-activity'"
+        />
+        <CallAgent
+            :type="type"
+            :filter="filter"
+            v-if="category === 'call-agent'"
+        />
     </div>
 </template>
 <script setup lang="ts">
@@ -107,18 +122,133 @@ import ButtonOutlineGrey from "@/Components/Button/ButtonOutlineGrey.vue";
 import DropdownMenu from "@/Components/Dropdown/DropdownMenu.vue";
 import Dropdown from "@/Components/Dropdown/Dropdown.vue";
 import TicketList from "./Data/TicketList.vue";
-import { ref } from "vue";
+import CallTracking from "./Data/CallTracking.vue";
+import AgentActivity from "./Data/AgentActivity.vue";
+import CallAgent from "./Data/CallAgent.vue";
+import { ref, onBeforeUnmount, onMounted } from "vue";
+import {
+    getAllQueryParameter,
+    getQueryParam,
+    showAlert,
+} from "@/Plugins/Function/global-function";
+import axios from "axios";
 
-const props = defineProps(["category", "queueLog", "type", "filter"]);
-const filtered = ref(false);
+const props = defineProps([
+    "category",
+    "queueLog",
+    "type",
+    "filter",
+    "export_url",
+]);
+const hasStartOrEnd = ref(
+    getQueryParam("filter[created_start]") ||
+        getQueryParam("filter[created_end]")
+);
+const filtered = ref(hasStartOrEnd.value ? true : false);
 const allParam = ref([]);
 const exportLoading = ref(false);
 
-const downloadReport = () => {};
+const downloadReport = (exportUrl?: string) => {
+    exportLoading.value = true;
+    try {
+        var formData = new FormData();
+        for (var key in allParam.value) {
+            formData.append(key, allParam.value[key]);
+        }
+        axios({
+            method: "post",
+            url:
+                exportUrl ||
+                route(`report.${props.type}.export`, props.category),
+            data: formData,
+            responseType: "blob",
+        })
+            .then((result) => {
+                if (result.headers.filename) {
+                    const blob = new Blob([result.data], {
+                        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    });
+                    const blobURL = URL.createObjectURL(blob);
+                    const anchor = document.createElement("a");
+                    anchor.href = blobURL;
+                    anchor.download = result.headers.filename;
+                    anchor.click();
+                    URL.revokeObjectURL(blobURL);
+                } else {
+                    showAlert("Failed to export report");
+                }
+                exportLoading.value = false;
+            })
+            .catch((error) => {
+                exportLoading.value = false;
+                showAlert("Failed to export report");
+            });
+    } catch (err) {
+        console.log(err);
+        exportLoading.value = false;
+        showAlert("Failed to export report");
+    }
+};
 
-const downloadReportForm = () => {};
+const downloadReportForm = () => {
+    const downloadLink =
+        props.type == "inbound"
+            ? route("report.inbound.ticket.export-form")
+            : route("report.outbound.ticket.export-form");
+    downloadReport(downloadLink);
+};
 
-const downloadReportFormPDF = () => {};
+const downloadReportTicketChat = () => {
+    const downloadLink =
+        props.type == "inbound"
+            ? route("report.inbound.ticket.export-chat")
+            : route("report.outbound.ticket.export-chat");
+    downloadReport(downloadLink);
+};
 
-const downloadReportTicketChat = () => {};
+const downloadReportFormPDF = () => {
+    exportLoading.value = true;
+    const downloadLink =
+        props.type == "inbound"
+            ? route("report.inbound.ticket.export-form")
+            : route("report.outbound.ticket.export-form");
+    try {
+        var formData = new FormData();
+        for (var key in allParam.value) {
+            formData.append(key, allParam.value[key]);
+        }
+        formData.append("type", "pdf");
+        axios({
+            method: "post",
+            url: downloadLink,
+            data: formData,
+        })
+            .then((result) => {
+                setTimeout(() => {
+                    window.location.reload();
+                    exportLoading.value = false;
+                }, 2000);
+            })
+            .catch((error) => {
+                exportLoading.value = false;
+                showAlert("Failed to export report");
+            });
+    } catch (err) {
+        console.log(err);
+        exportLoading.value = false;
+        showAlert("Failed to export report");
+    }
+};
+
+const getAllParam = () => {
+    allParam.value = getAllQueryParameter();
+    filtered.value = Object.keys(allParam.value).length ? true : false;
+};
+window.addEventListener("changeUrlParameter", getAllParam);
+onMounted(() => {
+    getAllParam();
+});
+onBeforeUnmount(() => {
+    window.removeEventListener("changeUrlParameter", getAllParam);
+});
 </script>

@@ -2,11 +2,14 @@
 namespace App\Service\Ticket;
 
 use App\Models\Ticket\Ticket;
+use App\Models\Util\InboundStatus;
+use Illuminate\Support\Str;
 
 class TicketService
 {
      public function __construct(
           private $model = Ticket::class,
+          private $inboundStatus = InboundStatus::class,
      ) {
      }
 
@@ -15,7 +18,7 @@ class TicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           $tickets = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
@@ -32,7 +35,7 @@ class TicketService
                ->active()
                ->distinct()
                ->when($type == 'outbound', fn($query) => $query->whereRelation('campaign', 'status', 'active'))
-               ->select('tickets.status', 'st.status_category', 'tickets.ticket_number')
+               ->select('tickets.status', 'st.status_category', 'tickets.ticket_number','tickets.status_id')
                ->get();
 
           return $tickets->map(function ($row) {
@@ -48,7 +51,8 @@ class TicketService
                return [
                     'label' => $row->status,
                     'color' => $statusColor,
-                    'html' => $html
+                    'html' => $html,
+                    'slug' => $row->status_id . "-" . Str::slug($row->status, '_')
                ];
           })
                ->unique()
@@ -62,7 +66,7 @@ class TicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           return $this->model::query()
                ->filterAgent(null, $companyId, $userId, $userRole, $type, $escalationType)
@@ -73,5 +77,51 @@ class TicketService
                ->when($type == 'outbound', fn($query) => $query->whereRelation('campaign', 'status', 'active'))
                ->distinct()
                ->pluck('tickets.product_name');
+     }
+
+     public function findAllInboundStatus($companyId){
+          $data = [];
+          $masterStatus = $this->findAllInboundStatusWithSub($companyId);
+          foreach ($masterStatus as $status) {
+               $subs = $status->sub;
+               if (!count($subs)) {
+                    $data[] = [
+                         'id' => $status->id,
+                         'label' => $status->name,
+                         'slug' => $status->id . "-" . Str::slug($status->name, '_')
+                    ];
+               }
+               foreach ($subs as $sub) {
+                    $data[] = [
+                         'id' => $sub->id,
+                         'label' => "{$status->name} - {$sub->name}",
+                         'slug' => $sub->id . "-" . Str::slug($sub->name, '_')
+                    ];
+               }
+          }
+          return [
+               ...[
+                    [
+                         "id" => "escalation-in-progress",
+                         "label" => "Escalation : In Progress",
+                         "slug" => "escalation-in-progress",
+                    ], [
+                         "id" => "escalation-done",
+                         "label" => "Escalation : Closed",
+                         "slug" => "escalation-done",
+                    ]    
+               ],
+               ...$data
+          ];
+     }
+
+     public function findAllInboundStatusWithSub($companyId)
+     {
+          return $this->inboundStatus::with(['sub:id,name,parent_id,status,status_category,email_customer_content,submit_without_fill,subject'])
+               ->where('company_id', $companyId)
+               ->oldest('sorting')
+               ->select('id', 'parent_id', 'name','status','status_category','email_customer_content','submit_without_fill','subject')
+               ->whereNull('parent_id')
+               ->get();
      }
 }
