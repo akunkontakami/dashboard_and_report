@@ -3,6 +3,7 @@ namespace App\Service\Ticket;
 
 use App\Enum\Role;
 use App\Models\Ticket\AgentActivity;
+use App\Models\Ticket\CallAgent;
 use App\Models\Ticket\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -220,10 +221,10 @@ class ReportTicketService
           if (!$created_start && !$created_end) {
                return [];
           }
-   
+
           $query = AgentActivity::query()
                ->where('view_report_agent_activity.company_id', $companyId)
-               ->filterAgent( $userRole, $userId, $companyId, $type, $escalationType)
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
                ->when($search, function ($query) use ($search) {
                     $query->where('view_report_agent_activity.name', 'like', "%{$search}%");
                })
@@ -237,6 +238,48 @@ class ReportTicketService
 
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
+
+
+     public function findAllCallAgentReportData($user, $filter, $search, $type, $paginate)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+
+          $query = CallAgent::query()
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->joinSpv($userRole, $companyId, $type, $escalationType)
+               ->where('view_report_call_agent.company_id', $companyId)
+               ->whereBetween('view_report_call_agent.date', [$created_start, $created_end])
+               ->when($agent_id, fn($filter) => $filter->whereIn('agent_id', $agent_id))
+               ->when($type == 'inbound', fn($query) => $query->whereNull('view_report_call_agent.sip'))
+               ->when($type == 'outbound', fn($query) => $query->whereNotNull('view_report_call_agent.sip'))
+               ->when($search, function ($query) use ($search) {
+                    $query->where('view_report_call_agent.agent_name', 'like', "%{$search}%");
+               })
+               ->select(
+                    'view_report_call_agent.*',
+                    'company_users.name as spv_name',
+                    'company_users.code as spv_code',
+                    DB::raw("'{$type}' as type_filter")
+               )
+               ->groupBy([
+                    'view_report_call_agent.agent_id',
+                    'view_report_call_agent.date',
+               ])
+               ->orderBy('date', 'desc');
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
 
 
 

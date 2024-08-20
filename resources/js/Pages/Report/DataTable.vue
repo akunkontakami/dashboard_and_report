@@ -109,6 +109,11 @@
             :filter="filter"
             v-if="category === 'agent-activity'"
         />
+        <CallAgent
+            :type="type"
+            :filter="filter"
+            v-if="category === 'call-agent'"
+        />
     </div>
 </template>
 <script setup lang="ts">
@@ -119,6 +124,7 @@ import Dropdown from "@/Components/Dropdown/Dropdown.vue";
 import TicketList from "./Data/TicketList.vue";
 import CallTracking from "./Data/CallTracking.vue";
 import AgentActivity from "./Data/AgentActivity.vue";
+import CallAgent from "./Data/CallAgent.vue";
 import { ref } from "vue";
 
 const props = defineProps(["category", "queueLog", "type", "filter"]);
