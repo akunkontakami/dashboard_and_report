@@ -2,6 +2,7 @@
 
 namespace App\Models\Ticket;
 
+use App\Enum\Role;
 use App\Models\Account\User;
 use App\Models\Inbound\UserHelpdesk;
 use App\Models\Util\CompanyProductSubject;
@@ -112,7 +113,7 @@ class Ticket extends Model
 
     public function scopeFilterAgent($query, $agentId, $companyId, $userId, $userRole, $category, $escalationType = null)
     {
-        if (!$agentId && $escalationType) {
+        if (!$agentId && !in_array($userRole, [Role::Admin, Role::BA])) {
             $relation = $category == 'inbound' ? 'view_inbound_teams' : 'view_outbound_teams';
             $agentIdColumnName = "current_agent_id";
             if ($userRole == 'spv_escalation' || str_contains($escalationType, 'escalation')) {

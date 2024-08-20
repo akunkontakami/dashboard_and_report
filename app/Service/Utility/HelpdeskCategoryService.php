@@ -17,7 +17,7 @@ class HelpdeskCategoryService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           
           return $this->model::query()
                ->with([

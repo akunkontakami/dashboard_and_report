@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\Report;
 
 use App\Enum\Role;
+use App\Http\Resources\Report\AgentActivityReportResource;
 use App\Http\Resources\Report\CallTrackingReportResource;
 use App\Http\Resources\Report\TicketListReportResource;
 use App\Service\Ticket\ReportTicketService;
@@ -66,6 +67,17 @@ trait ReportController
                     paginate : $paginate
                );
                $items = CallTrackingReportResource::collection($data);
+          }
+
+          if($category=='agent-activity'){
+               $data =  $service->findAllAgentActivityReportData(
+                    user : $user,
+                    filter : $request->get('filter',[]),
+                    search : $request->search,
+                    type : $this->type,
+                    paginate : $paginate
+               );
+               $items = AgentActivityReportResource::collection($data);
           }
 
           return $items;

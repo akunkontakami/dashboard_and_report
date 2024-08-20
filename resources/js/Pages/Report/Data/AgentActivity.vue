@@ -4,22 +4,18 @@
             :spv="filter.spv"
             :agent="filter.agent"
             :type="type"
-            :reset="route(`report.${type}.index`, 'call-tracking')"
+            :reset="route(`report.${type}.index`, 'agent-activity')"
         />
         <AlertRequiredFilter v-if="!filtered" />
         <Table v-else :columns="columns" :paginate="paginate">
             <tr v-for="row in paginate.data.value">
-                <Td class="whitespace-nowrap">
-                    {{ row.agent_code }}
-                    -
-                    {{ row.agent_name }}
-                </Td>
-                <Td class="whitespace-nowrap">{{ row.spv_name }}</Td>
-                <Td class="whitespace-nowrap">{{ row.total_customer }}</Td>
-                <Td class="whitespace-nowrap">{{ row.total_ticket }}</Td>
-                <Td class="whitespace-nowrap" v-for="status in filter.status">
-                    {{ row.ticket_status[status.slug] || 0 }}
-                </Td>
+                <Td class="whitespace-nowrap">{{ row.date }}</Td>
+                <Td class="whitespace-nowrap">{{ row.name }}</Td>
+                <Td class="whitespace-nowrap">{{ row.role }}</Td>
+                <Td class="whitespace-nowrap">{{ row.login_time }}</Td>
+                <Td class="whitespace-nowrap">{{ row.available_time }}</Td>
+                <Td class="whitespace-nowrap">{{ row.talktime }}</Td>
+                <Td class="whitespace-nowrap">{{ row.offline }}</Td>
             </tr>
         </Table>
     </div>
@@ -31,10 +27,18 @@ import Table from "@/Components/Table/Table.vue";
 import Td from "@/Components/Table/Td.vue";
 import { getQueryParam } from "@/Plugins/Function/global-function";
 import { usePaginate } from "@/Plugins/Hooks/usePaginate";
-import { ref, onBeforeUnmount, onMounted } from "vue";
+import { ref, onBeforeUnmount } from "vue";
 
 const props = defineProps(["filter", "type"]);
-const columns = ref(["Agent", "SPV", "Customer Count", "Ticket Count"]);
+const columns = ref([
+    "Date",
+    "Name",
+    "Role",
+    "Login Time",
+    "Available Time",
+    "Talk Time",
+    "Offline",
+]);
 const hasStartOrEnd = ref(
     getQueryParam("filter[created_start]") ||
         getQueryParam("filter[created_end]")
@@ -42,25 +46,14 @@ const hasStartOrEnd = ref(
 const filtered = ref(hasStartOrEnd.value ? true : false);
 
 const paginate = usePaginate({
-    route: route(`report.${props.type}.data-table`, "call-tracking"),
+    route: route(`report.${props.type}.data-table`, "agent-activity"),
 });
-
-const buildColumns = () => {
-    var columnList = columns.value;
-    for (var row of props.filter.status) {
-        columnList.push(row.label);
-    }
-    columns.value = columnList;
-};
 
 const handleFilter = () => {
     filtered.value = true;
 };
 window.addEventListener("changeUrlParameter", handleFilter);
 
-onMounted(() => {
-    buildColumns();
-});
 onBeforeUnmount(() => {
     window.removeEventListener("changeUrlParameter", handleFilter);
 });

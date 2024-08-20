@@ -1,6 +1,8 @@
 <?php
 namespace App\Service\Ticket;
 
+use App\Enum\Role;
+use App\Models\Ticket\AgentActivity;
 use App\Models\Ticket\Ticket;
 use Illuminate\Support\Facades\DB;
 
@@ -16,7 +18,7 @@ class ReportTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           $created_start = @$filter['created_start'];
           $created_end = @$filter['created_end'];
@@ -138,7 +140,7 @@ class ReportTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           $created_start = @$filter['created_start'];
           $created_end = @$filter['created_end'];
@@ -203,6 +205,39 @@ class ReportTicketService
 
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
+
+     public function findAllAgentActivityReportData($user, $filter, $search, $type, $paginate)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $agent_id = @$filter['agent_id'];
+          $roles = @$filter['roles'];
+          if (!$created_start && !$created_end) {
+               return [];
+          }
+   
+          $query = AgentActivity::query()
+               ->where('view_report_agent_activity.company_id', $companyId)
+               ->filterAgent( $userRole, $userId, $companyId, $type, $escalationType)
+               ->when($search, function ($query) use ($search) {
+                    $query->where('view_report_agent_activity.name', 'like', "%{$search}%");
+               })
+               ->whereBetween('date', [$created_start, $created_end])
+               ->select([
+                    'view_report_agent_activity.*',
+                    DB::raw("'{$type}' as type_category")
+               ])
+               ->when($agent_id, fn($query) => $query->whereIn('user_id', $agent_id))
+               ->when($roles, fn($query) => $query->whereIn('role', $roles));
+
+          return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
 
 
 }

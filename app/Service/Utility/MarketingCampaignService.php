@@ -17,7 +17,7 @@ class MarketingCampaignService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           return $this->model::query()
                ->where('company_id', $companyId)
                ->where('status', 'active')
@@ -30,10 +30,11 @@ class MarketingCampaignService
           // Todo : filter by their own campaign
           $companyId = $user->company_id;
           $userId = $user->id;
-          $escalation_type = $user->escalation_type;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
           $escalationId = [];
 
-          if (str_contains($escalation_type, 'escalation')) {
+          if (str_contains($escalationType, 'escalation')) {
                $escalationId = DB::table('escalation_team_members')
                     ->where('company_id', $companyId)
                     ->where('user_id', $userId)
@@ -42,7 +43,7 @@ class MarketingCampaignService
           }
           return DB::table('escalation_teams')
                ->where('company_id', $companyId)
-               ->when(str_contains($escalation_type, 'escalation'), fn($query) => $query->whereIn('id', $escalationId))
+               ->when(str_contains($escalationType, 'escalation'), fn($query) => $query->whereIn('id', $escalationId))
                ->select(['id', 'name'])
                ->where('category', $type)
                ->where('status', 'active')

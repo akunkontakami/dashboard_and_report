@@ -10,13 +10,13 @@ class CompanyUserService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $teamsRole = $role == 'spv' ? ['spv', 'spv_escalation'] : ['agent', 'agent_escalation'];
           $userTeamId = [];
 
           if ($userRole == 'am') {
-               if (str_contains($escalation_type, 'escalation_')) {
-                    $type = str_contains($escalation_type, '_inbound') ? 'inbound' : 'outbound';
+               if (str_contains($escalationType, 'escalation_')) {
+                    $type = str_contains($escalationType, '_inbound') ? 'inbound' : 'outbound';
                     $userTeamId = DB::table('escalation_team_assignments')
                          ->where('company_id', $companyId)
                          ->where('user_id', $userId)

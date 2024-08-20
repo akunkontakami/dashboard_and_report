@@ -23,7 +23,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -54,7 +54,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $sourceTicket = ['From Email', 'From Whatsapp', 'From Facebook', 'From Instagram'];
           $result = $this->model::query()
                ->select([
@@ -79,7 +79,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $sourceTicket = ['From Whatsapp Bot', 'From Web Bot'];
           $result = $this->model::query()
                ->select([
@@ -104,7 +104,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -135,7 +135,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -166,7 +166,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->select([
                     'tickets.id',
@@ -190,7 +190,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $campaignId = @$filter['campaign_id'];
           $productId = @$filter['product_id'];
 
@@ -245,7 +245,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -284,7 +284,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -323,7 +323,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -359,7 +359,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $result = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
                     $join->on("st.id", "tickets.status_id");
@@ -395,7 +395,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           return $this->model::query()
                ->select([
                     'tickets.source',
@@ -416,7 +416,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           return $this->call::query()
                ->select([
                     DB::raw("count(distinct calls.id) as total")
@@ -434,7 +434,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $csat = $this->rating::query()
                ->fromRaw("
                     ratings,
@@ -473,7 +473,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $campaignId = @$filter['campaign_id'];
           $productId = @$filter['product_id'];
 
@@ -510,7 +510,7 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalation_type = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
           $marketingCampaign = @$filter['campaign_id'];
           $productId = @$filter['product_id'];
 

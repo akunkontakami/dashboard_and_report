@@ -18,7 +18,7 @@ class TicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           $tickets = $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
@@ -66,7 +66,7 @@ class TicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-          $escalationType = $user->escalation_type;
+          $escalationType = $user->escalation_type || $userRole;
 
           return $this->model::query()
                ->filterAgent(null, $companyId, $userId, $userRole, $type, $escalationType)
