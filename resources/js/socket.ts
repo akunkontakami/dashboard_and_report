@@ -8,6 +8,7 @@ export const state = reactive({
      connected: false,
      connectionId: "",
 });
+
 export const socket = io(VITE_SOCKET_URL,
      {
           transports: ['websocket'],
