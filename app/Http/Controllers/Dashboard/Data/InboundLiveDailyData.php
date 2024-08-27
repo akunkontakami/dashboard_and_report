@@ -6,6 +6,7 @@ use App\Service\Ticket\DashboardTicketService;
 use App\Service\Utility\UtilityService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+
 trait InboundLiveDailyData
 {
      public function liveDailyCard(Request $request, DashboardTicketService $dashboardTicketService)
@@ -55,7 +56,7 @@ trait InboundLiveDailyData
      {
           $user = user();
           $currentDate = now()->format('Y-m-d');
-          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, [$currentDate,$currentDate], "inbound",10);
+          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, [$currentDate, $currentDate], "inbound", 10);
      }
 
      public function liveDailyFirstResponseTime(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
@@ -68,12 +69,13 @@ trait InboundLiveDailyData
           return $tickets;
      }
 
-     public function liveDailyFirstResolutionTime(Request $request, DashboardTicketService $dashboardTicketService)
+     public function liveDailyFirstResolutionTime(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $todayDate = now();
           $dates = Yellow::createRangeInterval($todayDate, -6); // to get only 7 day last
-          $tickets = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, 'inbound');
+          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $tickets = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, $totalResolutionSlaTime, 'inbound');
           return $tickets;
      }
 }
