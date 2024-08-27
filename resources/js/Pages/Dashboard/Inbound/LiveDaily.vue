@@ -7,7 +7,7 @@
         <div class="grid grid-cols-5 gap-2 mt-3">
             <div class="col-span-2">
                 <h1 class="font-krub-bold text-[13px] mb-1">
-                    Tickets Solved by Agent (Top 10)
+                    Tickets Closed by Agent (Top 10)
                 </h1>
                 <InboundTicketSolvedByAgent />
             </div>

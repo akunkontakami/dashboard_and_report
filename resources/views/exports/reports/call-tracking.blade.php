@@ -19,7 +19,7 @@
             <td style="vertical-align: top;">{{ @$row['total_customer'] }}</td>
             <td style="vertical-align: top;td">{{ @$row['total_ticket'] }}</td>
             @foreach ($data['status'] as $status)
-                <td style="vertical-align: top;td">{{ @$row['status'][$status['slug']] ?: 0 }}</td>
+                <td style="vertical-align: top;td">{{ @$row['ticket_status'][$status['slug']] ?: 0 }}</td>
             @endforeach
         </tr>
     @endforeach

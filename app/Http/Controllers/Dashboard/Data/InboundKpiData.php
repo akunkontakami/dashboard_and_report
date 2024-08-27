@@ -143,6 +143,11 @@ trait InboundKpiData
                     "label" => "Facebook",
                     "color" => "#E4BEBE",
                     "source" => ['From Facebook']
+               ],
+               [
+                    "label" => "Kontakami",
+                    "color" => "#3942B7",
+                    "source" => ['From Kontakami']
                ]
           ];
 

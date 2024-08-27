@@ -7,7 +7,7 @@
         <th style="width:250px"><b>Internal Remarks</b></th>
         <th style="width:250px"><b>Call History</b></th>
         {{-- <th style="width:250px"><b>In App Chat</b></th> --}}
-        <th style="width:250px"><b>WhatsApp</b></th>
+        {{-- <th style="width:250px"><b>WhatsApp</b></th> --}}
     </tr>
     @foreach ($data['items'] as $row)
         <tr>
@@ -18,12 +18,12 @@
             <td style="vertical-align: top;">{{ $row->customer_name }}</td>
             <td style="vertical-align: top;">
                 @foreach (@$row->comments['note'] ?: [] as $note)
-                    [ {{ $note->name }} - {{ date('d M Y H:i:s',strtotime($note->created_at)) }} ] : {{ $note->content }} <br>
+                    [ {{ $note->name ?: $row->customer_name }} - {{ date('d M Y H:i:s',strtotime($note->created_at)) }} ] : {{ $note->content }} <br>
                 @endforeach
             </td>
             <td style="vertical-align: top;">
                 @foreach (@$row->comments['remark'] ?: [] as $remark)
-                    [ {{ $remark->name }} - {{ date('d M Y H:i:s',strtotime($remark->created_at)) }} ] : {{ $remark->content }} <br>
+                    [ {{ $remark->name ?: $row->customer_name }} - {{ date('d M Y H:i:s',strtotime($remark->created_at)) }} ] : {{ $remark->content }} <br>
                 @endforeach
             </td>
             <td style="vertical-align: top;">
@@ -50,7 +50,7 @@
                     </p>
                 @endforeach
             </td> --}}
-            <td style="vertical-align: top;width:350px">
+            {{-- <td style="vertical-align: top;width:350px">
                 @foreach ($row->wa ?: [] as $wa)
                     <p>
                         <b>[ {{ $wa->name ?: $row->customer_name }} :
@@ -68,7 +68,7 @@
                         @endif
                     </p>
                 @endforeach
-            </td>
+            </td> --}}
         </tr>
     @endforeach
 </table>

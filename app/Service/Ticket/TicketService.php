@@ -47,6 +47,8 @@ class TicketService
                     default => 'bg-online',
                };
                $statusColor = str_contains(strtolower($row->status), 'closed') ? 'bg-online' : $statusColor;
+               $statusColor = str_contains(strtolower($row->status), 'new') ? 'bg-offline' : $statusColor;
+               $statusColor = str_contains(strtolower($row->status), 'solved') ? 'bg-blue' : $statusColor;
                $html = "<span class='flex gap-2 items-center justify-center'><span class='h-[10px] w-[10px] rounded-full {$statusColor} block'></span> {$row->status}</span>";
                return [
                     'label' => $row->status,

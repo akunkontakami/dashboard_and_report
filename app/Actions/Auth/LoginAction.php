@@ -38,14 +38,15 @@ class LoginAction
           $this->forceLogoutUser($user->id);
 
           $companyName = null;
+          $companyId = $user->company_id ?: $companyUser->company_id;
           if($companyUser && !in_array($user->role,[Role::BA,Role::Admin])){
-               $companyName = $companyUser->companyProfile?->brand_name;
+               $companyName = $companyUser?->brand_name;
           }
           $sessionObject = [
                'id' => $user->id,
                'role' => $user->role,
                'name' => $user->name,
-               'company_id' => $user->company_id ?: $companyUser->company_id,
+               'company_id' => $companyId,
                'lang' => $user->lang ?: 'en',
                'avatar' => asset($user->profile),
                'user_company' => (object) [
@@ -54,6 +55,10 @@ class LoginAction
                     'profile' => asset($companyUser?->profile ?: $user->profile),
                ],
                'company_name' => $companyName, 
+               'company' => (object)[
+                    'id' => $companyId,
+                    'name' => $companyName
+               ],
                'escalation_type' => $companyUser?->escalation_type,
           ];
 
@@ -164,14 +169,13 @@ class LoginAction
                     // throw ValidationException::withMessages(['password' => 'The password you entered does not match']);
                }
 
-               if (!$user->companyUser) {
+               if (!$companyUser = $user->companyUser) {
                     throw ValidationException::withMessages([
                          'email' => 'You have not registered with any company',
                     ]);
                }
 
 
-               $companyUser = $user->companyUser->with(['companyProfile'])->first();
                if ($companyUser->status !== StatusEnum::Active) {
                     throw ValidationException::withMessages(['email' => 'Your account is in active by business account']);
                }
@@ -179,6 +183,8 @@ class LoginAction
                if (!Hash::check($request->password, $user->password)) {
                     // throw ValidationException::withMessages([ 'password' => 'The password you entered does not match',]);
                }
+               $companyProfile = @$companyUser?->companyProfile;
+               $companyUser->brand_name = $companyProfile->brand_name;
 
           }
 

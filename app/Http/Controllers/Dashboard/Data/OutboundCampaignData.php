@@ -17,10 +17,14 @@ trait OutboundCampaignData
                'campaign_id' => $request->campaign_id,
                'product_id' => $request->product_id
           ]);
+          $isProduct = $request->product_id ? true : false;
 
           $data_size = $data?->data_size ?: 0;
           $call_attempt = $data?->call_attempt ?: 0;
           $close_deal = $data?->close_deal ?: 0;
+          if($isProduct){
+               $close_deal = $data?->utilized ?: 0;
+          }
           $higher = [
                "label" => "Data Size",
                "total" => $data_size
@@ -33,7 +37,7 @@ trait OutboundCampaignData
           }
           if ($close_deal > $call_attempt) {
                $higher = [
-                    "label" => "Close Deals",
+                    "label" => $isProduct ? "Utilized" :"Close Deals",
                     "total" => $close_deal
                ];
           }
@@ -50,7 +54,7 @@ trait OutboundCampaignData
                          'color' => '#FFBD44'
                     ],
                     [
-                         'label' => "Close Deals",
+                         'label' => $isProduct ? "Utilized" :"Close Deals",
                          "value" => $close_deal,
                          'color' => '#00CA4E'
                     ]
@@ -58,6 +62,8 @@ trait OutboundCampaignData
                'higher' => $higher
           ];
      }
+
+     
 
      public function topClosedCampaignAgent(Request $request, DashboardTicketService $dashboardTicketService)
      {

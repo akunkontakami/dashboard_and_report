@@ -44,13 +44,13 @@ import DropdownProduct from "@/Components/Dropdown/DropdownProduct.vue";
 import OutboundMarketingCampaignProductChart from "@/Components/Chart/Outbound/OutboundMarketingCampaignProductChart.vue";
 import OutboundCampaignProductTicketByType from "@/Components/Chart/Outbound/OutboundCampaignProductTicketByType.vue";
 import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
-import { ref } from "vue";
+import { ref,onBeforeMount } from "vue";
 import {
     getQueryParam,
     routeAppendParam,
 } from "@/Plugins/Function/global-function";
 
-defineProps(["products"]);
+const props = defineProps(["products"]);
 const period = ref(getQueryParam("period", "today"));
 const productId = ref(getQueryParam("product_id"));
 
@@ -63,4 +63,14 @@ const updateProduct = (value:string) => {
     routeAppendParam({product_id : value})
     productId.value = value
 }
+const init = () => {
+    const products = props.products;
+    if (products.length) {
+        productId.value = products[0].id;
+    }
+};
+
+onBeforeMount(() => {
+    init();
+});
 </script>

@@ -26,7 +26,7 @@
                 v-model="filter.categories"
             />
             <MultipleHelpdesk
-                label="Inbound Category"
+                label="Helpdesk Category"
                 :helpdesk="helpdesk"
                 v-model="filter.helpdesk_id"
                 v-if="type === 'inbound'"

@@ -1,5 +1,5 @@
 <?php
-namespace App\Models\Inbound;
+namespace App\Models\Util;
 
 
 use App\Models\Account\User;

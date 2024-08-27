@@ -24,8 +24,8 @@ class User extends Model
     ];
 
 
-    public function companyUser(): BelongsTo
+    public function companyUser()
     {
-        return $this->belongsTo(CompanyUser::class, 'id', 'user_id');
+        return $this->hasOne(CompanyUser::class, 'user_id', 'id');
     }
 }
