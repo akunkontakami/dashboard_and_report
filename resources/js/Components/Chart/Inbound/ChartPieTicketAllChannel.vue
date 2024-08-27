@@ -97,6 +97,7 @@ const ticketChannelBadges = ref([
     ["#7A7E80", "Email"],
     ["#E99C00", "Instagram"],
     ["#E4BEBE", "Facebook"],
+    ["#3942B7", "Kontakami"],
 ]);
 const voicePstnBadges = ref([
     ["#FF605C", "Abandoned call"],

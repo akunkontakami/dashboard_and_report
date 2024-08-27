@@ -92,27 +92,27 @@
         <h2 class="group-name">Insured</h2>
         <p class="label">Group Premi</p>
         <div class="input">
-            {{ $row->insured?->group_premi ?: '-' }}
+            {{ @$row->insured['group_premi'] ?: '-' }}
         </div>
         <p class="label">DOB</p>
         <div class="input">
-            {{ $row->insured?->dob ?: '-' }}
+            {{ @$row->insured['dob'] ?: '-' }}
         </div>
         <p class="label">Age</p>
         <div class="input">
-            {{ $row->insured?->age ?: '-' }}
+            {{ @$row->insured['age'] ?: '-' }}
         </div>
         <p class="label">Payment Method</p>
         <div class="input">
-            {{ $row->insured?->payment_mode ?: '-' }}
+            {{ @$row->insured['payment_mode'] ?: '-' }}
         </div>
         <p class="label">Plan Type</p>
         <div class="input">
-            {{ $row->insured?->plan_type ?: '-' }}
+            {{ @$row->insured['plan_type'] ?: '-' }}
         </div>
         <p class="label">Premi</p>
         <div class="input">
-            {{ $row->insured?->plan_premi_value ?: '-' }}
+            {{ @$row->insured['plan_premi_value'] ?: '-' }}
         </div>
     </div>
 

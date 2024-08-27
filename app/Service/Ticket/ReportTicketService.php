@@ -5,6 +5,7 @@ use App\Enum\Role;
 use App\Models\Ticket\AgentActivity;
 use App\Models\Ticket\CallAgent;
 use App\Models\Ticket\Ticket;
+use App\Models\Ticket\TicketHistory;
 use Illuminate\Support\Facades\DB;
 
 class ReportTicketService
@@ -234,7 +235,8 @@ class ReportTicketService
                     DB::raw("'{$type}' as type_category")
                ])
                ->when($agent_id, fn($query) => $query->whereIn('user_id', $agent_id))
-               ->when($roles, fn($query) => $query->whereIn('role', $roles));
+               ->when($roles, fn($query) => $query->whereIn('role', $roles))
+               ->groupBy('view_report_agent_activity.user_id');
 
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
@@ -281,10 +283,17 @@ class ReportTicketService
      }
 
 
-     public function findAllFormTicketListReportData($companyId, $type, $filter, $search)
+     public function findAllFormTicketListReportData($user, $type, $filter, $search)
      {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
           $created_start = @$filter['created_start'];
           $created_end = @$filter['created_end'];
+          $modify_start = @$filter['modify_start'];
+          $modify_end = @$filter['modify_end'];
           $origins = @$filter['origins'];
           $category = @$filter['category'];
           $helpdesk_id = @$filter['helpdesk_id'];
@@ -292,9 +301,11 @@ class ReportTicketService
           $status = @$filter['status'];
           $spv_id = @$filter['spv_id'];
           $agent_id = @$filter['agent_id'];
-          if (!$created_start && !$created_end) {
+
+          if ((!$created_start && !$created_end) && (!$modify_start && !$modify_end)) {
                return [];
           }
+
 
 
           $relations = [
@@ -314,7 +325,9 @@ class ReportTicketService
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->where('tickets.is_bucket', 0)
-               ->whereBetween('created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"])
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->when($created_start && $created_end, fn($query) => $query->whereBetween('tickets.created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"]))
+               ->when($modify_start && $modify_end, fn($query) => $query->whereBetween('tickets.ticket_date', [$modify_start . " 00:00:00", $modify_end . " 23:59:59"]))
                ->when(
                     $search,
                     fn($q) => $q->where(function ($query) use ($search) {
@@ -344,7 +357,7 @@ class ReportTicketService
                ->orderBy('tickets.created_at', 'desc')
                ->get()
                ->map(function ($items) {
-                    if($items->lastHistory){
+                    if ($items->lastHistory) {
                          $items->form = $items->lastHistory?->forms->groupBy('form_category')->map(function ($row) {
                               return $row->groupBy('group_name')
                                    ->map(function ($group) {
@@ -352,7 +365,7 @@ class ReportTicketService
                                              ->sortBy('sorting')
                                              ->each(function ($row) {
                                                   if ($row->input_type == 'file') {
-                                                       $row->content = asset($row->content);
+                                                       $row->content = $row->content && $row->content!='' ? asset($row->content) : '';
                                                   }
                                              })
                                              ->values();
@@ -363,8 +376,8 @@ class ReportTicketService
                          $items->beneficiary = $items->lastHistory?->beneficiary;
                          unset($items->lastHistory->forms);
                          unset($items->lastHistory->insured);
-                         unset($items->lastHistory->beneficiary);                         
-                    }else{
+                         unset($items->lastHistory->beneficiary);
+                    } else {
                          $items->form = [];
                          $items->insured = [];
                          $items->beneficiary = [];
@@ -374,5 +387,88 @@ class ReportTicketService
      }
 
 
+
+     public function findAllChatTicketListReportData($user, $type, $filter, $search)
+     {
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+          
+          $created_start = @$filter['created_start'];
+          $created_end = @$filter['created_end'];
+          $modify_start = @$filter['modify_start'];
+          $modify_end = @$filter['modify_end'];
+          $origins = @$filter['origins'];
+          $category = @$filter['category'];
+          $helpdesk_id = @$filter['helpdesk_id'];
+          $campaign_id = @$filter['campaign_id'];
+          $status = @$filter['status'];
+          $spv_id = @$filter['spv_id'];
+          $agent_id = @$filter['agent_id'];
+          
+          if ((!$created_start && !$created_end) && (!$modify_start && !$modify_end)) {
+               return [];
+          }
+
+
+          return TicketHistory::query()
+               ->with([
+                    'messages', 
+                    // 'wa', 
+                    'comments'
+               ])
+               ->join('tickets', 'tickets.id', 'ticket_histories.ticket_id')
+               ->leftJoin('company_users', function ($join) {
+                    $join->on('company_users.user_id', 'ticket_histories.agent_id');
+                    $join->on('company_users.company_id', 'ticket_histories.company_id');
+               })
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.is_bucket', 0)
+               ->when($created_start && $created_end, fn($query) => $query->whereBetween('tickets.created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"]))
+               ->when($modify_start && $modify_end, fn($query) => $query->whereBetween('tickets.ticket_date', [$modify_start . " 00:00:00", $modify_end . " 23:59:59"]))
+               ->when(
+                    $search,
+                    fn($q) => $q->where(function ($query) use ($search) {
+                         $query->where('tickets.product_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.customer_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.ticket_number', 'like', "%{$search}%");
+                    })
+               )
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
+               ->when($status, fn($query) => $query->whereIn('tickets.status', $status))
+               ->when($category, fn($query) => $query->whereIn('tickets.product_category', $category))
+               ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
+               ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
+                    $query->whereRelation('ticket.product.helpdeskName', fn($query) => $query->whereIn('helpdesk_id', $helpdesk_id));
+               })
+               ->when($campaign_id, function ($query) use ($campaign_id) {
+                    $query->whereRelation('ticket.product.campaignName', fn($query) => $query->whereIn('marketing_campaign_id', $campaign_id));
+               })
+               ->select([
+                    'tickets.ticket_date as created_at',
+                    'ticket_histories.created_at as history_date',
+                    'tickets.number_id',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+                    'ticket_histories.note',
+                    'ticket_histories.remark',
+                    'ticket_histories.id',
+                    'ticket_histories.ticket_id',
+                    'ticket_histories.chat_id',
+                    'ticket_histories.status',
+                    'company_users.name as agent_name',
+                    'ticket_histories.inbound_whatsapp_id'
+               ])
+               ->orderBy('ticket_histories.created_at', 'desc')
+               ->get()
+               ->map(function ($items) {
+                    $items->comments = $items->comments?->groupBy('type');
+                    return $items;
+               });
+     }
 
 }

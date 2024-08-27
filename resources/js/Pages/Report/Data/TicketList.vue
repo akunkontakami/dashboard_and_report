@@ -96,6 +96,8 @@
                 </Td>
             </tr>
         </Table>
+
+        <span class="bg-blue"></span>
         <PopupDescription title="Subject" :description="descriptionSubject" />
     </div>
 </template>
