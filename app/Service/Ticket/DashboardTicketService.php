@@ -207,14 +207,15 @@ class DashboardTicketService
                     'tickets.current_agent_id',
                     'company_users.name',
                     'company_users.profile',
-                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total"),
+                    DB::raw("sum(case when st.status_category in ('Closed','Solved') or tickets.status in ('Closed','Auto Closed','Solved') then 1 else 0 end) as total"),
                     DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
+               ->whereNull('tickets.marketing_campaign_id')
                ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
                ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
-               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
                     $query->whereIn('st.status_category', ["Solved", "Closed"]);
                     $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
@@ -498,7 +499,7 @@ class DashboardTicketService
                ->where('tickets.type', $type)
                ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
                ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
-               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")
                ->get();
@@ -527,7 +528,8 @@ class DashboardTicketService
                ->select([
                     DB::raw("count(distinct tickets.id) as data_size"),
                     DB::raw("sum(h.call_attempt) as call_attempt"),
-                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal")
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal"),
+                    DB::raw("sum(case when st.status_category is null or tickets.status='New' then 1 else 0 end) as utilized"),
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
