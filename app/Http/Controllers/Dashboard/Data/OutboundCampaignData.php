@@ -29,22 +29,11 @@ trait OutboundCampaignData
           if($isProduct){
                $close_deal = $data?->utilized ?: 0;
           }
+          
           $higher = [
-               "label" => "Data Size",
-               "total" => $data_size
+               "label" => "Avg. Call Attempt",
+               "total" => $data_size ? round($call_attempt / $data_size,2) : 0
           ];
-          if ($call_attempt > $data_size) {
-               $higher = [
-                    "label" => "Call Attempt",
-                    "total" => $call_attempt
-               ];
-          }
-          if ($close_deal > $call_attempt) {
-               $higher = [
-                    "label" => $isProduct ? "Utilized" :"Close Deals",
-                    "total" => $close_deal
-               ];
-          }
           return [
                'items' => [
                     [

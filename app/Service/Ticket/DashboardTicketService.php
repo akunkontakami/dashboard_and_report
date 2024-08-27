@@ -266,10 +266,11 @@ class DashboardTicketService
                $frt = 0;
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
-                    $totalTicket = $ticket->total_ticket * $totalResponseSlaTime;
-                    if ($ticketClosed = $ticket->total_closed) {
-                         $frt = round($totalTicket / $ticketClosed);
-                    }
+                    // $totalTicket = $ticket->total_ticket * $totalResponseSlaTime;
+                    // if ($ticketClosed = $ticket->total_closed) {
+                    //      $frt = round($totalTicket / $ticketClosed);
+                    // }
+                    $frt = round($totalResponseSlaTime / $ticket->total_ticket,2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),
@@ -279,7 +280,7 @@ class DashboardTicketService
           });
      }
 
-     public function findAllFirstResolutionTime($user, $dates, $type)
+     public function findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, $type)
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
@@ -301,14 +302,15 @@ class DashboardTicketService
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("date(created_at)")
                ->get();
-          return collect($dates)->map(function ($date) use ($result) {
+          return collect($dates)->map(function ($date) use ($result,$totalResolutionSlaTime) {
                $frt = 0;
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
-                    $totalTicket = $ticket->total_ticket;
-                    if ($durationClosed = $ticket->duration_closed) {
-                         $frt = round($durationClosed / $totalTicket);
-                    }
+                    // $totalTicket = $ticket->total_ticket;
+                    // if ($durationClosed = $ticket->duration_closed) {
+                    //      $frt = round($durationClosed / $totalTicket);
+                    // }
+                    $frt = round($totalResolutionSlaTime / $ticket->total_ticket,2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),

@@ -48,8 +48,9 @@ trait InboundKpiData
           $totalDay = count($dates);
 
           $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
           $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
-          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, 'inbound')->sum('frt');
+          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
           return [
                [
                     "name" => "average first response time",
@@ -77,9 +78,10 @@ trait InboundKpiData
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
 
           $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
 
           $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
-          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, 'inbound');
+          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound');
           return $responseTime->map(function ($response) use ($resolutionTime) {
                $resolution = $resolutionTime->where('date', $response['date'])->first();
                return [
@@ -148,6 +150,11 @@ trait InboundKpiData
                     "label" => "Kontakami",
                     "color" => "#3942B7",
                     "source" => ['From Kontakami']
+               ],
+               [
+                    "label" => "Walk-In",
+                    "color" => "#C6BD48",
+                    "source" => ['From Walk-In']
                ]
           ];
 
