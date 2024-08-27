@@ -533,9 +533,46 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
+               ->whereNull('tickets.escalation_team_id')
                ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
                ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
-               ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->first();
+     }
+
+     public function findAllTicketOutboundMarketingCampaignDataSize($user, $type, $filter)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+          $marketingCampaign = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
+          $subJoinTicketHistory = DB::table('ticket_histories')
+               ->selectRaw("ticket_id,count(id) as call_attempt")
+               ->groupBy("ticket_id");
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->join('marketing_campaigns','marketing_campaigns.id','tickets.marketing_campaign_id')
+               ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
+               ->select([
+                    DB::raw("count(distinct tickets.id) as data_size"),
+                    DB::raw("sum(h.call_attempt) as call_attempt"),
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal"),
+                    DB::raw("sum(case when st.status_category is null or tickets.status='New' then 1 else 0 end) as utilized"),
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('marketing_campaigns.status', 'active')
+               ->whereNull('tickets.escalation_team_id')
+               ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
+               ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
                ->first();
      }
 
