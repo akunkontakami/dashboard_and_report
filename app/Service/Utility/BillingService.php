@@ -11,6 +11,9 @@ class BillingService
 
      public function findReportItemBilling($billing)
      {
+          if(!$billing){
+               return ["Ticket List"];
+          }
           $mainPackage = @$billing->summary['additional']['reports']['items'] ?: [];
           $additional = collect($billing?->additional ?: []);
           return collect(array_unique([

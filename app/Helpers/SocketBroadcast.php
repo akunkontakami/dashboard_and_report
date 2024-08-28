@@ -71,7 +71,6 @@ class SocketBroadcast
                               'channel' => $channel,
                               'data' => $data
                          ]);
-                    logger($result);
                     return $result;
                }
           }catch(\Exception $e){}
