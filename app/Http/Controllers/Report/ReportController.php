@@ -35,7 +35,7 @@ trait ReportController
           return Inertia::render("Report/Index", [
                'billing' => [
                     'report_items' => $billingService->findReportItemBilling($billing),
-                    'can_view' => $billing->expired_at >= date('Y-m-d H:i:s'),
+                    'can_view' => $billing ? $billing->expired_at >= date('Y-m-d H:i:s') : false,
                ],
                'category' => $category,
                'type' => $this->type,
