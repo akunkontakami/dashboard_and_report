@@ -84,7 +84,7 @@
                             >
                                 <div>
                                     <p
-                                        class="text-dark font-krub-bold text-[14px] mb-0"
+                                        class="text-yellow font-krub-bold text-[14px] mb-0"
                                     >
                                         {{ menu.label }}
                                     </p>
@@ -105,7 +105,6 @@
 </template>
 <script setup lang="ts">
 import AuthLayout from "@/Layouts/AuthLayout.vue";
-import AppLogo from "@/Components/Icon/Logo/AppLogo.vue";
 import Input from "@/Components/Input/Index.vue";
 import InputPassword from "@/Components/Input/Password.vue";
 import Select from "@/Components/Input/Select.vue";
