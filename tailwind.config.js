@@ -17,7 +17,7 @@ export default {
             colors: {
                 body: '#F4F6FA',
                 red: '#FF0000',
-                yellow: '#FEB500',
+                yellow: '#3943B7',
                 dark: '#25213B',
                 online : '#38A363',
                 offline : '#FE4C4C',

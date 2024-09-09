@@ -65,6 +65,8 @@ body.sidebar-collapse .main-sidebar nav .nav-item {
 body.sidebar-collapse .main-sidebar nav .nav-item a {
      display: flex;
      justify-content: center;
+     padding: 5px;
+     height: 35px;
 }
 
 body.sidebar-collapse .main-sidebar nav.main-nav {
@@ -73,6 +75,7 @@ body.sidebar-collapse .main-sidebar nav.main-nav {
 
 body.sidebar-collapse .main-sidebar nav .nav-item .menu-name {
      display: none;
+     height: 35px;
 }
 
 body.sidebar-collapse .submenu.collapse.show {
@@ -84,16 +87,17 @@ body.sidebar-collapse .submenu.collapse.show {
 body.sidebar-collapse .main-sidebar nav .nav-item:hover .menu-name {
      display: block;
      position: absolute;
-     left: 34px;
-     top: 2px;
-     background: #fff;
+     left: 33px;
+     top: 0px;
+     background: #3943B7;
      padding: 10px;
      white-space: nowrap;
      border-left: 0;
      border-radius: 10px;
      width: 175px;
      padding-left: 35px;
-     border-right: 1px solid #e5e7eb
+     border-right: 1px solid #e5e7eb;
+     color: white;
 }
 
 body.sidebar-collapse .main-sidebar nav .nav-item .submenu li a {
@@ -165,31 +169,54 @@ body.sidebar-collapse .main-sidebar nav .menu-list {
 }
 
 .main-sidebar nav .nav-item.has-submenu .submenu li a:hover {
-     color: #FEB500;
+     color: #3943B7;
 }
-
+body.sidebar-collapse .nav-item.active .nav-link{
+     background-color: #3943B7;
+     border-radius: 5px;
+     padding: 10px;
+}
+body.sidebar-collapse .nav-item:hover .nav-parent{
+     background-color: #3943B7;
+     border-radius: 5px;
+     /* padding: 10px; */
+     height: 35px;
+}
+body.sidebar-collapse .nav-item:hover .nav-parent svg{
+     fill: white !important;
+}
+body.sidebar-collapse .nav-item:hover .nav-parent i{
+     color: white !important;
+}
+body.sidebar-collapse .nav-item.active .nav-link.active{
+     background-color: #3943B7 !important;
+     color: white !important;
+}
+body.sidebar-collapse .nav-item.active .nav-link svg{
+     fill: #fff !important;
+}
 .nav-item.active .nav-parent {
-     color: #FFB600;
+     color: #3943B7;
 }
 
 .nav-item .nav-parent:hover {
-     color: #FFB600;
+     color: #3943B7;
 }
 
 .nav-item .nav-parent:hover svg {
-     fill: #FFB600 !important;
+     fill: #3943B7 !important;
 }
 
 .nav-item .nav-parent:hover i {
-     color: #FFB600 !important;
+     color: #3943B7 !important;
 }
 
 .nav-item.active .nav-parent svg {
-     fill: #FFB600 !important;
+     fill: #3943B7 !important;
 }
 
 .nav-item.active .nav-parent i {
-     color: #FFB600 !important;
+     color: #3943B7 !important;
 }
 
 .nav-item .nav-parent svg {
@@ -202,7 +229,7 @@ body.sidebar-collapse .main-sidebar nav .menu-list {
 }
 
 .nav-item.active .submenu .active {
-     background-color: #FEB500;
+     background-color: #3943B7;
      color: #fff !important;
      border-radius: 6px;
 }

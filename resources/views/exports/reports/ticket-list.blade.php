@@ -77,7 +77,7 @@
         color: #38A363 !important
     }
     .bg-yellow{
-        color: #FEB500 !important
+        color: #3943B7 !important
     }
     .bg-offline{
         color: #FE4C4C !important

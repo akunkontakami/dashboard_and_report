@@ -17,7 +17,37 @@ class AuthLoginController extends Controller
         if(user()){
             return to_route('dashboard.inbound.index',"live-daily");
         }
-        return Inertia::render("Auth/Login");
+        
+        $menus = [
+            [
+                'label' => 'Login to Admin',
+                'description' => 'Superadmin and Admin Roles',
+                'url' => 'https://bapremium.haloyelow.com/'
+            ],
+            [
+                'label' => 'Login to Leader',
+                'description' => 'Account Manager and Supervisor Roles',
+                'url' => 'https://sqc.haloyelow.com/'
+            ],
+            [
+                'label' => 'Login to Agent',
+                'description' => 'Agent Role',
+                'url' => 'https://agent.haloyelow.com/'
+            ],
+            [
+                'label' => 'Login to Dashboard',
+                'description' => 'Dashboard and Report for All Roles',
+                'url' => 'https://report.haloyelow.com/'
+            ],
+            [
+                'label' => 'Login to Kontakami',
+                'description' => 'Self Service Contact Center',
+                'url' => 'https://business.kontakami.com/login'
+            ]
+        ];
+        return Inertia::render("Auth/Login",[
+            'menus' => $menus
+        ]);
     }
 
     public function store(Request $request, LoginAction $loginAction)
