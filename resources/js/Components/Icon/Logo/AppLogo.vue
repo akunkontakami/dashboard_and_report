@@ -9,9 +9,9 @@
     >
         <path
             d="M0 47C0 21.0426 21.0426 0 47 0C72.9574 0 94 21.0426 94 47C94 72.9574 72.9574 94 47 94H0V47Z"
-            fill="#FEB500"
+            fill="#3943B7"
         />
-        <rect x="12" y="12" width="70" height="70" rx="35" fill="#FEB500" />
+        <rect x="12" y="12" width="70" height="70" rx="35" fill="#3943B7" />
         <rect x="21" y="21" width="59" height="51.9367" fill="url(#pattern0)" />
         <defs>
             <pattern

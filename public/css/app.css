@@ -32,7 +32,8 @@
 }
 
 .bg-auth{
-     background-image: url('../img/bg-auth.webp');
+     /* background-image: url('../img/bg-auth.webp'); */
+     background-image: url('../img/auth-background.png');
      background-position: center;
      background-size: cover;
      background-repeat: no-repeat;
@@ -55,8 +56,8 @@ input[type="checkbox"]::after {
      background: #fff;
 }
 input[type="checkbox"]:checked::after {
-     background: #FEB500;
-     border-color: #FEB500;
+     background: #3943B7;
+     border-color: #3943B7;
      background-position: center;
      background-size: cover;
      background-image: url('../img/checkbox.svg');
