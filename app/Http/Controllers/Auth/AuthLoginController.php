@@ -22,28 +22,28 @@ class AuthLoginController extends Controller
             [
                 'label' => 'Login to Admin',
                 'description' => 'Superadmin and Admin Roles',
-                'url' => 'https://bapremium.haloyelow.com/'
+                'url' => 'https://admin.kontakami.com/'
             ],
             [
                 'label' => 'Login to Leader',
                 'description' => 'Account Manager and Supervisor Roles',
-                'url' => 'https://sqc.haloyelow.com/'
+                'url' => 'https://leader.kontakami.com/'
             ],
             [
                 'label' => 'Login to Agent',
                 'description' => 'Agent Role',
-                'url' => 'https://agent.haloyelow.com/'
+                'url' => 'https://agent.kontakami.com/'
             ],
             [
                 'label' => 'Login to Dashboard',
                 'description' => 'Dashboard and Report for All Roles',
-                'url' => 'https://report.haloyelow.com/'
+                'url' => 'https://report.kontakami.com/'
             ],
-            [
-                'label' => 'Login to Kontakami',
-                'description' => 'Self Service Contact Center',
-                'url' => 'https://business.kontakami.com/login'
-            ]
+            // [
+            //     'label' => 'Login to Kontakami',
+            //     'description' => 'Self Service Contact Center',
+            //     'url' => 'https://business.kontakami.com/'
+            // ]
         ];
         return Inertia::render("Auth/Login",[
             'menus' => $menus
