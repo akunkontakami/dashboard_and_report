@@ -16,7 +16,7 @@
                     {{ row.agent_name }}
                 </Td>
                 <Td class="whitespace-nowrap">{{ row.spv_name }}</Td>
-                <Td>
+                <!-- <Td>
                     {{ row.incoming || 0 }}
                 </Td>
                 <Td>
@@ -28,7 +28,7 @@
                 <Td>
                     {{ row.callback || 0 }}
                 </Td>
-                <Td>0</Td>
+                <Td>0</Td> -->
                 <Td class="whitespace-nowrap">{{ row.talktime }}</Td>
                 <Td class="whitespace-nowrap">{{ row.avg_talktime }}</Td>
             </tr>
@@ -49,11 +49,11 @@ const columns = ref([
     "Date",
     "Agent",
     "SPV",
-    "Incoming Call",
-    "Outgoing Call",
-    "Missed Call",
-    "Callback",
-    "Outgoing Campaign",
+    // "Incoming Call",
+    // "Outgoing Call",
+    // "Missed Call",
+    // "Callback",
+    // "Outgoing Campaign",
     "Talk Time",
     "Avg Talktime Per Call",
 ]);

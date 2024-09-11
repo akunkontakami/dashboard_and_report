@@ -443,10 +443,10 @@ class ReportTicketService
                ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
                ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
                ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
-                    $query->whereRelation('ticket.product.helpdeskName', fn($query) => $query->whereIn('helpdesk_id', $helpdesk_id));
+                    $query->whereIn('tickets.campaign_id', $helpdesk_id);
                })
                ->when($campaign_id, function ($query) use ($campaign_id) {
-                    $query->whereRelation('ticket.product.campaignName', fn($query) => $query->whereIn('marketing_campaign_id', $campaign_id));
+                    $query->whereIn('tickets.marketing_campaign_id', $campaign_id);
                })
                ->select([
                     'tickets.ticket_date as created_at',

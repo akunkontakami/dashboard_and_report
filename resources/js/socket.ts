@@ -68,12 +68,12 @@ const handleBroadcastEvent = (properties: any) => {
                /**
                 * Handle force logout single login feature
                 */
-               if (socket.connected) {
-                    socket.disconnect()
-               }
-               router.get(route("auth.logout"),{
-                    force : true
-               });
+               // if (socket.connected) {
+               //      socket.disconnect()
+               // }
+               // router.get(route("auth.logout"),{
+               //      force : true
+               // });
                break;
 
           default:
