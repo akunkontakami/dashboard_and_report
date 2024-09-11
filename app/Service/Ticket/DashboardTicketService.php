@@ -199,7 +199,7 @@ class DashboardTicketService
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
-               ->join("company_users", function ($join) {
+               ->leftJoin("company_users", function ($join) {
                     $join->on("company_users.company_id", "tickets.company_id");
                     $join->on("company_users.user_id", "tickets.current_agent_id");
                })
@@ -212,7 +212,7 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->whereNull('tickets.marketing_campaign_id')
+               // ->whereNull('tickets.marketing_campaign_id')
                ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
                ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
@@ -531,11 +531,11 @@ class DashboardTicketService
                     DB::raw("count(distinct tickets.id) as data_size"),
                     DB::raw("sum(h.call_attempt) as call_attempt"),
                     DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal"),
-                    DB::raw("sum(case when st.status_category is null or tickets.status='New' then 1 else 0 end) as utilized"),
+                    DB::raw("sum(case when  tickets.status!='New' then 1 else 0 end) as utilized"),
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->whereNull('tickets.escalation_team_id')
+               // ->whereNull('tickets.escalation_team_id')
                ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
                ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])

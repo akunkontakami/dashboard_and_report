@@ -22,21 +22,21 @@ class AuthenticationMiddleware
             return to_route('auth.login.index');
         }
 
-        if (!$request->inertia() && !$request->expectsJson() && !$request->header('x-requested-with')) {
-            $account = null;
-            $regid = null;
-            if(in_array($user->role,[Role::BA,Role::Admin])){
-                $account = CompanyAccount::where('id', $user->id)->select('device_token')->first();
-                $regid = $account?->device_token;
-            }else{
-                $account = User::where('id', $user->id)->select('regid')->first();
-                $regid = $account?->regid;
-            }
-            if (!$account || $regid !== session('user-device-token')) {
-                $request->session()->flush();
-                return to_route('auth.login.index')->with(['error' => 'You already login in another device']);
-            }
-        }
+        // if (!$request->inertia() && !$request->expectsJson() && !$request->header('x-requested-with')) {
+        //     $account = null;
+        //     $regid = null;
+        //     if(in_array($user->role,[Role::BA,Role::Admin])){
+        //         $account = CompanyAccount::where('id', $user->id)->select('device_token')->first();
+        //         $regid = $account?->device_token;
+        //     }else{
+        //         $account = User::where('id', $user->id)->select('regid')->first();
+        //         $regid = $account?->regid;
+        //     }
+        //     if (!$account || $regid !== session('user-device-token')) {
+        //         $request->session()->flush();
+        //         return to_route('auth.login.index')->with(['error' => 'You already login in another device']);
+        //     }
+        // }
 
         return $next($request);
     }

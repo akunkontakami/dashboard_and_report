@@ -238,7 +238,7 @@ trait ReportController
           } else if ($category == 'call-tracking') {
                $status = $this->getCallTrackingTicketStatus($user);
           } else if ($category == 'call-agent') {
-               $status = ['Incoming Call', 'Outgoing Call', 'Missed Call', 'Callback', 'Outgoing Campaign'];
+               // $status = ['Incoming Call', 'Outgoing Call', 'Missed Call', 'Callback', 'Outgoing Campaign'];
           }
 
           if (in_array($user->role, [Role::BA, Role::Admin, Role::AM])) {

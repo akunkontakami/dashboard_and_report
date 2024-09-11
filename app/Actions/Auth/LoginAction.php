@@ -35,7 +35,7 @@ class LoginAction
                throw ValidationException::withMessages(['email' => 'The email you entered is incorrect',]);
           }
 
-          $this->forceLogoutUser($user->id);
+          // $this->forceLogoutUser($user->id);
 
           $companyName = null;
           $companyId = $user->company_id ?: $companyUser->company_id;
@@ -62,22 +62,22 @@ class LoginAction
                'escalation_type' => $companyUser?->escalation_type,
           ];
 
-          $randomDeviceToken = base64_encode(str()->uuid() . date('YmdHis'));
-          if($companyAccount){
-               unset($companyAccount->name);
-               unset($companyAccount->profile);
-               $companyAccount->update([
-                    'device_token' => $randomDeviceToken
-               ]);
-          }else{
-               $user->update([
-                    'platform' => 'web',
-                    'regid' => $randomDeviceToken
-               ]);
-          }
+          // $randomDeviceToken = base64_encode(str()->uuid() . date('YmdHis'));
+          // if($companyAccount){
+          //      unset($companyAccount->name);
+          //      unset($companyAccount->profile);
+          //      $companyAccount->update([
+          //           'device_token' => $randomDeviceToken
+          //      ]);
+          // }else{
+          //      $user->update([
+          //           'platform' => 'web',
+          //           'regid' => $randomDeviceToken
+          //      ]);
+          // }
 
           session()->put(config('services.session-user-prefix'), (object) $sessionObject);
-          session()->put('user-device-token', $randomDeviceToken);
+          // session()->put('user-device-token', $randomDeviceToken);
           return $user;
      }
 

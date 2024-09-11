@@ -14,7 +14,7 @@
                 </p>
                 <ul class="flex gap-3 text-[11px]">
                     <li>Open : <strong>{{row.open}}</strong></li>
-                    <li>Solved : <strong>{{row.total}}</strong></li>
+                    <li>Closed : <strong>{{row.total}}</strong></li>
                 </ul>
             </div>
         </div>
@@ -68,6 +68,12 @@ import EmptyState from "../../Icon/Etc/EmptyState.vue";
  );
  watch(
      () => props.campaignId,
+     (periode, value) => {
+         fetchData();
+     }
+ );
+ watch(
+     () => props.productId,
      (periode, value) => {
          fetchData();
      }
