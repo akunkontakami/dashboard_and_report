@@ -64,7 +64,7 @@ trait InboundLiveDailyData
           $user = user();
           $todayDate = now();
           $dates = Yellow::createRangeInterval($todayDate, -6); // to get only 7 day last
-          $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
           $tickets = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
           return $tickets;
      }
@@ -74,7 +74,7 @@ trait InboundLiveDailyData
           $user = user();
           $todayDate = now();
           $dates = Yellow::createRangeInterval($todayDate, -6); // to get only 7 day last
-          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
           $tickets = $dashboardTicketService->findAllFirstResolutionTime($user, $dates, $totalResolutionSlaTime, 'inbound');
           return $tickets;
      }

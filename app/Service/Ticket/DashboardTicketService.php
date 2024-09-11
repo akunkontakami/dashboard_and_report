@@ -255,14 +255,16 @@ class DashboardTicketService
                ->selectRaw("
                     date(created_at) date,
                     count(tickets.id) as total_ticket,
-                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total_closed 
+                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as total_closed ,
+                    sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_response_time, '$.duration')))) as duration,
+                    sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(tickets.sla_response_time, '$.solved_duration')))) as solved_duration
                ")
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("date(created_at)")
                ->get();
-          return collect($dates)->map(function ($date) use ($result, $totalResponseSlaTime) {
+          return collect($dates)->map(function ($date) use ($result) {
                $frt = 0;
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
@@ -270,7 +272,10 @@ class DashboardTicketService
                     // if ($ticketClosed = $ticket->total_closed) {
                     //      $frt = round($totalTicket / $ticketClosed);
                     // }
-                    $frt = round($totalResponseSlaTime / $ticket->total_ticket,2);
+                    $ticketDuration = $ticket->duration  ? $ticket->duration / 60 : 0;
+                    $ticketSolvedDuration = $ticket->solved_duration ? $ticket->solved_duration / 60 : 0;
+                    $totalResponseTime = $ticketDuration - ($ticketSolvedDuration);
+                    $frt = round($totalResponseTime / $ticket->total_ticket,2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),
@@ -295,14 +300,16 @@ class DashboardTicketService
                ->selectRaw("
                     date(created_at) date,
                     count(tickets.id) as total_ticket,
-                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed  
+                    sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed,
+                    sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.duration')))) as duration,
+                    sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration')))) as solved_duration
                ")
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("date(created_at)")
                ->get();
-          return collect($dates)->map(function ($date) use ($result,$totalResolutionSlaTime) {
+          return collect($dates)->map(function ($date) use ($result) {
                $frt = 0;
                $ticket = $result->where('date', $date)->first();
                if ($ticket) {
@@ -310,7 +317,10 @@ class DashboardTicketService
                     // if ($durationClosed = $ticket->duration_closed) {
                     //      $frt = round($durationClosed / $totalTicket);
                     // }
-                    $frt = round($totalResolutionSlaTime / $ticket->total_ticket,2);
+                    $ticketDuration = $ticket->duration  ? $ticket->duration / 60 : 0;
+                    $ticketSolvedDuration = $ticket->solved_duration ? $ticket->solved_duration / 60 : 0;
+                    $totalResponseTime = $ticketDuration - ($ticketSolvedDuration);
+                    $frt = round($totalResponseTime / $ticket->total_ticket,2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),

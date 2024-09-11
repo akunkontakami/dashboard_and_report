@@ -47,8 +47,8 @@ trait InboundKpiData
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
           $totalDay = count($dates);
 
-          $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
           $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
           $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
           return [
@@ -77,8 +77,8 @@ trait InboundKpiData
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
 
-          $totalResponseSlaTime = $utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-          $totalResolutionSlaTime = $utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
 
           $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
           $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound');
