@@ -22,8 +22,21 @@
     </CardPieChannel>
 
     <!-- Voice PSTN -->
-    <CardPieChannel label="Voice PSTN" :badges="voicePstnBadges">
-        <div class="bg-[#ddd] w-[150px] h-[150px] rounded-full"></div>
+    <CardPieChannel label="Voice PSTN" :badges="voicePstnBadges" :loading="loading.voice_pstn" :isEmpty="sumArray(voicePstnSeries)==0">
+        <!-- <div class="bg-[#ddd] w-[150px] h-[150px] rounded-full"></div> -->
+        <VueApexCharts
+            type="donut"
+            :width="230"
+            :options="{
+                ...chartOptions,
+                fill: {
+                    colors: webCallBadges.map((row) => row[0]),
+                },
+                colors: voicePstnBadges.map((row) => row[0]),
+                labels: voicePstnBadges.map((row) => row[1]),
+            }"
+            :series="voicePstnSeries"
+        ></VueApexCharts>
     </CardPieChannel>
 
     <!-- Web Call -->
@@ -79,6 +92,7 @@ import { ref, onMounted, watch } from "vue";
 const props = defineProps(["period"]);
 const ticketByChannelSeries = ref([]);
 const webCallSeries = ref([]);
+const voicePstnSeries = ref([]);
 const csatSeries = ref([]);
 
 const loading = ref({
@@ -212,6 +226,7 @@ const fetchData = () => {
     ticketByChannel();
     webCall();
     csatRating();
+    voicePstn()
 };
 
 const ticketByChannel = () => {
@@ -262,6 +277,26 @@ const csatRating = () => {
             loading.value = {
                 ...loading.value,
                 csat: false,
+            };
+        });
+};
+
+const voicePstn = () => {
+    axios
+        .get(
+            route("dashboard.inbound.data.kpi.voice-pstn", {
+                periode: props.period,
+            })
+        )
+        .then((result) => {
+            const data = result.data || null;
+            if (data) {
+                const { abandoned, missed_call } = data;
+                voicePstnSeries.value = [abandoned, missed_call] as any;
+            }
+            loading.value = {
+                ...loading.value,
+                voice_pstn: false,
             };
         });
 };
