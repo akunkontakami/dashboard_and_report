@@ -479,7 +479,7 @@ class DashboardTicketService
                return [
                     $rating => $csat->where('rating',$rating)->sum('total'),
                ];
-          });
+          })->values();
           return [
                ...$ratings,
                'good' => round($goodRating),
