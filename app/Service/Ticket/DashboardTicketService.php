@@ -475,7 +475,13 @@ class DashboardTicketService
                $goodRating = $goodRating / $allRating * 100;
                $badRating = $badRating / $allRating * 100;
           }
+          $ratings = collect([1,2,3,4,5])->map(function($rating) use($csat){
+               return [
+                    $rating => $csat->where('rating',$rating)->sum('total'),
+               ];
+          });
           return [
+               ...$ratings,
                'good' => round($goodRating),
                'bad' => round($badRating),
                'total' => $allRating,
