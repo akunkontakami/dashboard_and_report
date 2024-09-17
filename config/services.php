@@ -40,4 +40,10 @@ return [
     
     'default_avatar' => 'https://yelow-app-storage.s3.ap-southeast-1.amazonaws.com/cnako525c6GTGkUq1nefIJ38mXinpV5JovDMuuws.png',
     'session-user-prefix' => 'haloyelow-customer',
+
+    'yeastar' => [
+        'url' => env('YEASTAR_API_URL'),
+        'username' => env('YEASTAR_API_USERNAME'),
+        'password' => env('YEASTAR_API_PASSWORD'),
+    ]
 ];
