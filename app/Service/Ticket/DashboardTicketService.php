@@ -301,8 +301,6 @@ class DashboardTicketService
                     date(created_at) date,
                     count(tickets.id) as total_ticket,
                     sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed,
-                    // sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.duration')))) as duration,
-                    // sum(TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration')))) as solved_duration,
                     sum(case when TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration'))) is not null then
                     TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration')))
                     else 0 
