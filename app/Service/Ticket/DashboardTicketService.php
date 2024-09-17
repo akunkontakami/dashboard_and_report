@@ -56,17 +56,32 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalationType = $user->escalation_type || $userRole;
           $sourceTicket = ['From Email', 'From Whatsapp', 'From Facebook', 'From Instagram'];
-          $result = $this->model::query()
-               ->select([
-                    'tickets.id',
-                    DB::raw("date(created_at) as date")
-               ])
-               ->filterByCompanyTypeDateRangeAndSource($companyId, $type, [$dateToday, $dateYesterday], $sourceTicket)
-               ->whereNull('tickets.current_agent_id')
-               ->get();
+         
+          $wa = DB::table('inbound_whatsapp')
+               ->where('company_id',$companyId)
+               ->where('is_customer_reply',true)
+               ->where('inbound_whatsapp','pending')
+               ->whereNull('agent_id')
+               ->whereRaw('date(created_at) in (?,?)',  [$dateToday, $dateYesterday])
+               ->selectRaw("count(id) as total,date(created_at) as date");
 
-          $today = $result->where('date', $dateToday)->count();
-          $yesterday = $result->where('date', $dateYesterday)->count();
+          $email = DB::table('company_inbound_emails')
+               ->where('company_id',$companyId)
+               ->where('status','pending')
+               ->whereNull('agent_id')
+               ->whereRaw('date(created_at) in (?,?)',  [$dateToday, $dateYesterday])
+               ->selectRaw("count(id) as total,date(created_at) as date");
+
+          $meta = DB::table('inbound_metas')
+               ->where('company_id',$companyId)
+               ->where('status','pending')
+               ->whereNull('agent_id')
+               ->whereRaw('date(created_at) in (?,?)',  [$dateToday, $dateYesterday])
+               ->selectRaw("count(id) as total,date(created_at) as date");
+
+          $result = $wa->union($email)->union($meta)->get();
+          $today = $result->where('date', $dateToday)->sum('total');
+          $yesterday = $result->where('date', $dateYesterday)->sum('total');
           return [
                'today' => $today,
                'yesterday' => $today - $yesterday
