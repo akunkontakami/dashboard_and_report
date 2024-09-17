@@ -481,7 +481,7 @@ class DashboardTicketService
                ];
           })->values();
           return [
-               ...$ratings,
+               'rating' => $ratings,
                'good' => round($goodRating),
                'bad' => round($badRating),
                'total' => $allRating,
