@@ -184,7 +184,7 @@ class DashboardTicketService
           ];
      }
 
-     public function findTopSolvedClosedTicketAgent($user, $dates, $type,$top = 10,$filter = [])
+     public function findTopSolvedClosedTicketAgent($user, $dates, $type, $top = 10, $filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
@@ -213,20 +213,20 @@ class DashboardTicketService
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                // ->whereNull('tickets.marketing_campaign_id')
-               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
-               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
+               ->when($campaignId, fn($query) => $query->where('tickets.marketing_campaign_id', $campaignId))
+               ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
                     $query->whereIn('st.status_category', ["Solved", "Closed"]);
                     $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
                })
-               ->groupBy(["tickets.current_agent_id", "company_users.name","company_users.profile"])
+               ->groupBy(["tickets.current_agent_id", "company_users.name", "company_users.profile"])
                ->orderBy("total", "desc")
                ->take($top)
                ->get();
           $items = $result->toArray();
           $totalData = $result->count();
-          if ($totalData < $top && $totalData && $type=='inbound') {
+          if ($totalData < $top && $totalData && $type == 'inbound') {
                $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
                     'current_agent_id' => null,
                     'name' => "#",
@@ -272,10 +272,10 @@ class DashboardTicketService
                     // if ($ticketClosed = $ticket->total_closed) {
                     //      $frt = round($totalTicket / $ticketClosed);
                     // }
-                    $ticketDuration = $ticket->duration  ? $ticket->duration / 60 : 0;
+                    $ticketDuration = $ticket->duration ? $ticket->duration / 60 : 0;
                     $ticketSolvedDuration = $ticket->solved_duration ? $ticket->solved_duration / 60 : 0;
                     $totalResponseTime = $ticketDuration - ($ticketSolvedDuration);
-                    $frt = round($totalResponseTime / $ticket->total_ticket,2);
+                    $frt = round($totalResponseTime / $ticket->total_ticket, 2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),
@@ -285,7 +285,7 @@ class DashboardTicketService
           });
      }
 
-     public function findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, $type)
+     public function findAllFirstResolutionTime($user, $dates, $totalResolutionSlaTime, $type)
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
@@ -323,10 +323,10 @@ class DashboardTicketService
                     // if ($durationClosed = $ticket->duration_closed) {
                     //      $frt = round($durationClosed / $totalTicket);
                     // }
-                    $ticketDuration = $ticket->duration  ? $ticket->duration / 60 : 0;
+                    $ticketDuration = $ticket->duration ? $ticket->duration / 60 : 0;
                     $ticketSolvedDuration = $ticket->solved_duration ? $ticket->solved_duration / 60 : 0;
                     $totalResponseTime = $ticketDuration - ($ticketSolvedDuration);
-                    $frt = round($totalResponseTime / $ticket->total_ticket,2);
+                    $frt = round($totalResponseTime / $ticket->total_ticket, 2);
                }
                return [
                     'date' => date('d-m-Y', strtotime($date)),
@@ -456,21 +456,16 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalationType = $user->escalation_type || $userRole;
           $csat = $this->rating::query()
-               ->fromRaw("
-                    ratings,
-                    JSON_TABLE(csat_rating, '$.ratings[*]'
-                    COLUMNS (
-                         rating INT PATH '$.rating'
-                    )
-                    ) AS rt
-               ")
+               ->leftJoin(DB::raw("JSON_TABLE(csat_rating, '$.ratings[*]' COLUMNS (rating INT PATH '$.rating')) AS rt"), function ($join) {
+                    $join->on(DB::raw('csat_rating'), '!=', DB::raw('NULL'));
+               })
                ->select([
-                    "rt.rating",
+                    DB::raw("IFNULL(`rt`.`rating`,ratings.rating) as rating"),
                     DB::raw("count(*) as total")
                ])
                ->where('ratings.company_id', $companyId)
                ->whereRaw("date(ratings.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-               ->groupBy('rt.rating')
+               ->groupByRaw("IFNULL(rt.rating,ratings.rating)")
                ->get();
 
           $goodRating = $csat->whereIn('rating', [4, 5])->sum('total');
@@ -487,7 +482,7 @@ class DashboardTicketService
           ];
      }
 
-     public function findAllTicketByStatusCategory($user, $dates, $type,$filter = [])
+     public function findAllTicketByStatusCategory($user, $dates, $type, $filter = [])
      {
           // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
@@ -516,8 +511,8 @@ class DashboardTicketService
                ])
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->when($campaignId,fn($query)=>$query->where('tickets.marketing_campaign_id',$campaignId))
-               ->when($productId,fn($query)=>$query->where('tickets.product_id',$productId))
+               ->when($campaignId, fn($query) => $query->where('tickets.marketing_campaign_id', $campaignId))
+               ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("tickets.status,st.status_category")
                ->orderByRaw("count(tickets.status) desc")
@@ -535,9 +530,9 @@ class DashboardTicketService
           $productId = @$filter['product_id'];
 
           $subJoinTicketHistory = DB::table('ticket_histories')
-               ->join('users','ticket_histories.agent_id','users.id')
+               ->join('users', 'ticket_histories.agent_id', 'users.id')
                ->selectRaw("ticket_histories.ticket_id,count(ticket_histories.id) as call_attempt")
-               ->whereNotIn('users.role',['agent_escalation'])
+               ->whereNotIn('users.role', ['agent_escalation'])
                ->groupBy("ticket_histories.ticket_id");
 
           return $this->model::query()
@@ -555,8 +550,8 @@ class DashboardTicketService
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
                // ->whereNull('tickets.escalation_team_id')
-               ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
-               ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
+               ->when($marketingCampaign, fn($query) => $query->where('tickets.marketing_campaign_id', $marketingCampaign))
+               ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->first();
      }
@@ -580,7 +575,7 @@ class DashboardTicketService
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
-               ->join('marketing_campaigns','marketing_campaigns.id','tickets.marketing_campaign_id')
+               ->join('marketing_campaigns', 'marketing_campaigns.id', 'tickets.marketing_campaign_id')
                ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
                ->select([
                     DB::raw("count(distinct tickets.id) as data_size"),
@@ -592,8 +587,8 @@ class DashboardTicketService
                ->where('tickets.type', $type)
                ->where('marketing_campaigns.status', 'active')
                ->whereNull('tickets.escalation_team_id')
-               ->when($marketingCampaign,fn($query)=>$query->where('tickets.marketing_campaign_id', $marketingCampaign))
-               ->when($productId,fn($query)=>$query->where('tickets.product_id', $productId))
+               ->when($marketingCampaign, fn($query) => $query->where('tickets.marketing_campaign_id', $marketingCampaign))
+               ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
                ->first();
      }
 
