@@ -17,10 +17,10 @@ trait OutboundCampaignData
                'campaign_id' => $request->campaign_id,
                'product_id' => $request->product_id
           ]);
-          // $dataSize = $dashboardTicketService->findAllTicketOutboundMarketingCampaignDataSize($user, 'outbound', [
-          //      'campaign_id' => $request->campaign_id,
-          //      'product_id' => $request->product_id
-          // ]);
+          $ticketByStatus = $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'outbound',[
+               'campaign_id' => $request->campaign_id,
+               'product_id' => $request->product_id
+          ]);
           $isProduct = $request->product_id ? true : false;
 
           $data_size = $data?->data_size ?: 0;
@@ -30,9 +30,10 @@ trait OutboundCampaignData
                $close_deal = $data?->utilized ?: 0;
           }
           
+          $totalTicketStatus = count($ticketByStatus);
           $higher = [
                "label" => "Avg. Call Attempt",
-               "total" => $data_size ? round($call_attempt / $data_size,2) : 0
+               "total" => $data_size ? round($call_attempt / $totalTicketStatus,2) : 0
           ];
           return [
                'items' => [
@@ -52,6 +53,7 @@ trait OutboundCampaignData
                          'color' => '#00CA4E'
                     ]
                ],
+               'totalTicketStatus' => $totalTicketStatus,
                'higher' => $higher
           ];
      }
