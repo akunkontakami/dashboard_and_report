@@ -17,13 +17,13 @@ trait OutboundCampaignData
                'campaign_id' => $request->campaign_id,
                'product_id' => $request->product_id
           ]);
-          $dataSize = $dashboardTicketService->findAllTicketOutboundMarketingCampaignDataSize($user, 'outbound', [
-               'campaign_id' => $request->campaign_id,
-               'product_id' => $request->product_id
-          ]);
+          // $dataSize = $dashboardTicketService->findAllTicketOutboundMarketingCampaignDataSize($user, 'outbound', [
+          //      'campaign_id' => $request->campaign_id,
+          //      'product_id' => $request->product_id
+          // ]);
           $isProduct = $request->product_id ? true : false;
 
-          $data_size = $dataSize?->data_size ?: 0;
+          $data_size = $data?->data_size ?: 0;
           $call_attempt = $data?->call_attempt ?: 0;
           $close_deal = $data?->close_deal ?: 0;
           if($isProduct){
