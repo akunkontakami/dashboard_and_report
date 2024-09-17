@@ -528,8 +528,10 @@ class DashboardTicketService
           $productId = @$filter['product_id'];
 
           $subJoinTicketHistory = DB::table('ticket_histories')
-               ->selectRaw("ticket_id,count(id) as call_attempt")
-               ->groupBy("ticket_id");
+               ->join('users','ticket_histories.agent_id','users.id')
+               ->selectRaw("ticket_histories.ticket_id,count(ticket_histories.id) as call_attempt")
+               ->whereNotIn('users.role',['agent_escalation'])
+               ->groupBy("ticket_histories.ticket_id");
 
           return $this->model::query()
                ->leftJoin("view_status_table_mapper as st", function ($join) {
