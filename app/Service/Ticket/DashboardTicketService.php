@@ -348,6 +348,7 @@ class DashboardTicketService
                               case 
                               when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
                               when st.status_category is  null then 'New' 
+                              when tickets.status='New' then 'New'
                               else st.status_category end
                          ) as status_category
                     "),
@@ -381,7 +382,7 @@ class DashboardTicketService
                ->selectRaw("
                     date(created_at) date,
                     sum(case when st.status_category='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as closed,
-                    sum(case when st.status_category='New' or tickets.status='New' then 1 else 0 end) as new,
+                    sum(case when (st.status_category='New' or st.status_category is null) or tickets.status='New' then 1 else 0 end) as new,
                     sum(case when st.status_category='Solved' then 1 else 0 end) as solved,
                     sum(case when st.status_category='Open' then 1 else 0 end) as open
                ")
