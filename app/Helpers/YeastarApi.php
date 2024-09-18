@@ -60,8 +60,8 @@ class YeastarApi
                     ]);
                if ($queueList = @$result['queue_performance_list']) {
                     $queueList = collect($queueList ?: []);
-                    $missed = $queueList->sum('missed_rate');
-                    $abandoned = $queueList->sum('abandoned_rate');
+                    $missed = $queueList->sum('missed_calls');
+                    $abandoned = $queueList->sum('abandoned_calls');
                     return [
                          'abandoned' => $abandoned,
                          'missed_call' => $missed
