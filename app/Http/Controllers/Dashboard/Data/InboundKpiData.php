@@ -176,12 +176,11 @@ trait InboundKpiData
           });
      }
 
-     public function kpiVoicePstn(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiVoicePstn(Request $request, YeastarApi $yeastarApi)
      {
           
           $user = user();
           $companyId = $user->company_id;
-          $yeastarApi = new YeastarApi;
 
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
