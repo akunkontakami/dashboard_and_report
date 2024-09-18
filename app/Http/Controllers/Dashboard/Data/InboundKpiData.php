@@ -176,20 +176,18 @@ trait InboundKpiData
           });
      }
 
-     public function kpiVoicePstn(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiVoicePstn(Request $request, YeastarApi $yeastarApi)
      {
           
           $user = user();
           $companyId = $user->company_id;
-          $yeastarApi = new YeastarApi;
 
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
           $startDate = date('d/m/Y',strtotime($dates[0])). " 00:00:00";
           $endDate = date('d/m/Y',strtotime($dates[count($dates)-1]))." 23:59:59";
           
-          // return [$startDate,$endDate];
-          return $yeastarApi->getAbaddonMissedCall('9a8e167e-e49b-403e-8a00-421cd13ab24b',$startDate,$endDate);
+          return $yeastarApi->getAbaddonMissedCall($companyId,$startDate,$endDate);
      }
 
      public function kpiWebCall(Request $request, DashboardTicketService $dashboardTicketService)
