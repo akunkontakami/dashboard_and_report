@@ -37,7 +37,7 @@ class AuthLoginController extends Controller
             [
                 'label' => 'Login to Dashboard',
                 'description' => 'Dashboard and Report for All Roles',
-                'url' => 'http://127.0.0.1:8000'
+                'url' => 'https://127.0.0.1:8000'
             ],
             // [
             //     'label' => 'Login to Kontakami',

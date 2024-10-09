@@ -2,7 +2,6 @@
 
     <!-- Voice PSTN -->
     <CardPieChannel label="Voice PSTN" :badges="voicePstnBadges" :loading="loading.voice_pstn" :isEmpty="sumArray(voicePstnSeries)==0">
-        <!-- <div class="bg-[#ddd] w-[150px] h-[150px] rounded-full"></div> -->
         <VueApexCharts
             type="donut"
             :width="230"
