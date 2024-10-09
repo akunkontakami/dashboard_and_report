@@ -11,10 +11,15 @@ trait InboundLiveDailyData
 {
      public function liveDailyCard(Request $request, DashboardTicketService $dashboardTicketService)
      {
-          $currentDate = now();
-          $user = user();
-          $today = $currentDate->clone()->format('Y-m-d');
-          $yesterday = $currentDate->subDays(1)->format('Y-m-d');
+         $currentDate = now();
+         $user = user();
+        //  $today = $currentDate->clone()->format('Y-m-d');
+        //  $yesterday = $currentDate->subDays(1)->format('Y-m-d');
+         $today = $currentDate->clone()->format('Y-09-17');
+         $yesterday = $currentDate->subDays(1)->format('Y-09-01');
+        //  dd($yesterday);
+        //  dd('halo');
+
 
 
           $new = $dashboardTicketService->findNewTicketByDate($user, $today, $yesterday, 'inbound');

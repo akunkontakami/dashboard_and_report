@@ -39,6 +39,7 @@ class DashboardTicketService
                     $query->orWhere('st.status_category', "New");
                })
                ->get();
+            //    echo $result;die;
 
           $today = $result->where('date', $dateToday)->count();
           $yesterday = $result->where('date', $dateYesterday)->count();
@@ -56,7 +57,7 @@ class DashboardTicketService
           $userRole = $user->role;
           $escalationType = $user->escalation_type || $userRole;
           $sourceTicket = ['From Email', 'From Whatsapp', 'From Facebook', 'From Instagram'];
-         
+        //   DB::enableQueryLog();
           $wa = DB::table('inbound_whatsapp')
                ->where('company_id',$companyId)
                ->where('is_customer_reply',true)
@@ -80,6 +81,8 @@ class DashboardTicketService
                ->selectRaw("count(id) as total,date(created_at) as date");
 
           $result = $wa->union($email)->union($meta)->get();
+        // $quries = DB::getQueryLog();
+        // dd($quries);
           $today = $result->where('date', $dateToday)->sum('total');
           $yesterday = $result->where('date', $dateYesterday)->sum('total');
           return [
@@ -318,11 +321,11 @@ class DashboardTicketService
                     sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then TIMESTAMPDIFF(MINUTE,created_at,ticket_date) else 0 end) as duration_closed,
                     sum(case when TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration'))) is not null then
                     TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration')))
-                    else 0 
+                    else 0
                     end) as solved_duration,
                     sum(case when TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.solved_duration'))) is not null then
                     TIME_TO_SEC(JSON_UNQUOTE(JSON_EXTRACT(sla_resolution_time, '$.duration')))
-                    else 0 
+                    else 0
                     end) as duration
                ")
                ->where('tickets.company_id', $companyId)
@@ -366,9 +369,9 @@ class DashboardTicketService
                ->select([
                     DB::raw("
                          (
-                              case 
+                              case
                               when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
-                              when st.status_category is  null then 'New' 
+                              when st.status_category is  null then 'New'
                               when tickets.status='New' then 'New'
                               else st.status_category end
                          ) as status_category
@@ -379,9 +382,9 @@ class DashboardTicketService
                ->where('tickets.type', $type)
                ->whereRaw("date(tickets.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->groupByRaw("
-                    case 
+                    case
                     when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
-                    when st.status_category is  null then 'New' 
+                    when st.status_category is  null then 'New'
                     else st.status_category end
                ")
                ->get();
@@ -522,9 +525,46 @@ class DashboardTicketService
                     'tickets.status',
                     DB::raw("
                          (
-                              case 
+                              case
                               when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
-                              when st.status_category is  null then 'New' 
+                              when st.status_category is  null then 'New'
+                              else st.status_category end
+                         ) as status_category
+                    "),
+                    DB::raw("count(tickets.status) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->when($campaignId, fn($query) => $query->where('tickets.marketing_campaign_id', $campaignId))
+               ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->groupByRaw("tickets.status,st.status_category")
+               ->orderByRaw("count(tickets.status) desc")
+               ->get();
+     }
+
+     public function findAllTicketByStatusCategoryTeamPerformance($user, $dates, $type, $filter = [])
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+          $campaignId = @$filter['campaign_id'];
+          $productId = @$filter['product_id'];
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->select([
+                    'tickets.status',
+                    DB::raw("
+                         (
+                              case
+                              when st.status_category is null and tickets.`status`='Auto Closed' then 'Closed'
+                              when st.status_category is  null then 'New'
                               else st.status_category end
                          ) as status_category
                     "),

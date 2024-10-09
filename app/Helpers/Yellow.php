@@ -26,6 +26,22 @@ class Yellow
           }
           return $dates;
      }
+     public static function createRangeIntervalTeamPerformace($start, $total)
+     {
+          $end = $start->clone()->addDays($total);
+          $startDate = $start > $end ? $end : $start;
+          $endDate = $end < $start ? $start : $end;
+
+          $dates = [];
+          $interval = new DateInterval('P1D');
+          $realEnd = new DateTime($endDate);
+          $realEnd->add($interval);
+          $period = new DatePeriod(new DateTime($startDate), $interval, $realEnd);
+          foreach ($period as $date) {
+               $dates[] = $date->format('Y-m-d');
+          }
+          return $dates;
+     }
 
      public static function minuteToSla($minutes)
      {
@@ -51,6 +67,19 @@ class Yellow
 
           $periode = @$periodeInterval[$periode] ?: 'today';
           return self::createRangeInterval($startDate, $periode);
+     }
+
+     public static function getDateRangeByPeriodTeamPerformance($startDate, $periode)
+     {
+          // Periode List : today, last-7-days , last-30-days,
+          $periodeInterval = [
+               'today' => 0,
+               'last-7-days' => -6,
+               'last-30-days' => -29
+          ];
+
+          $periode = @$periodeInterval[$periode] ?: 'today';
+          return self::createRangeIntervalTeamPerformace($startDate, $periode);
      }
 
      public static function getDurationSlaTimer($objectTimer, $endOrNow)

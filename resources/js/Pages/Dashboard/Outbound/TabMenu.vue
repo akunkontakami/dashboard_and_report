@@ -16,8 +16,13 @@
  import { Link } from "@inertiajs/vue3";
  import { ref } from "vue";
  defineProps(["active"]);
- 
+
  const menus = ref([
+
+    {
+         id: "salescalls",
+         name: "Sales Calls",
+     },
      {
          id: "marketing-campaign",
          name: "Marketing Campaign",
@@ -28,4 +33,3 @@
      },
  ]);
  </script>
- 
