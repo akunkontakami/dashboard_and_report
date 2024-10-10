@@ -55,6 +55,8 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('team-performance/ticket-channel', 'kpiTicketChannel2')->name('team-performance.ticket-channel');
                     Route::get('team-performance/web-call', 'kpiWebCall2')->name('team-performance.web-call');
                     Route::get('team-performance/csat', 'kpiCsat2')->name('team-performance.csat');
+
+                    Route::get('team-performance/top-closed', 'topClosedCampaignAgent2')->name('campaign.top-closed');
                });
 
           Route::controller(OutboundDashboardController::class)

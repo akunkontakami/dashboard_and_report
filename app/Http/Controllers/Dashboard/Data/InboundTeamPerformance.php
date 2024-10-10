@@ -53,160 +53,161 @@ trait InboundTeamPerformance
           });
      }
 
-    //  public function kpiSlaTime2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
-    //  {
-    //       $user = user();
-    //       $currentDate = now();
-    //       $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-    //       $totalDay = count($dates);
+     public function kpiSlaTime2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
+     {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $totalDay = count($dates);
 
-    //       $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-    //       $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
-    //       $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
-    //       $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
-    //       return [
-    //            [
-    //                 "name" => "average first response time",
-    //                 "total" => Yellow::minuteToSla(round($responseTime / $totalDay))
-    //            ],
-    //            [
-    //                 "name" => "average first resolution time",
-    //                 "total" => Yellow::minuteToSla(round($resolutionTime / $totalDay))
-    //            ]
-    //       ];
-    //  }
+          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
+          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
+          return [
+               [
+                    "name" => "average first response time",
+                    "total" => Yellow::minuteToSla(round($responseTime / $totalDay))
+               ],
+               [
+                    "name" => "average first resolution time",
+                    "total" => Yellow::minuteToSla(round($resolutionTime / $totalDay))
+               ]
+          ];
+     }
 
-    //  public function kpiTicketActivity2(Request $request, DashboardTicketService $dashboardTicketService)
-    //  {
-    //       $user = user();
-    //       $currentDate = now();
-    //       $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-    //       return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
-    //  }
+     public function kpiTicketActivity2(Request $request, DashboardTicketService $dashboardTicketService)
+     {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
+     }
 
-    //  public function kpiSlaChart2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
-    //  {
-    //       $user = user();
-    //       $currentDate = now();
-    //       $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+     public function kpiSlaChart2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
+     {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
 
-    //       $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-    //       $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
+          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
+          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
 
-    //       $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
-    //       $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound');
-    //       return $responseTime->map(function ($response) use ($resolutionTime) {
-    //            $resolution = $resolutionTime->where('date', $response['date'])->first();
-    //            return [
-    //                 'date' => $response['date'],
-    //                 'response' => (object) [
-    //                      'value' => $response['frt'],
-    //                      'label' => $response['label'],
-    //                 ],
-    //                 'resolution' => (object) [
-    //                      'value' => $resolution['frt'],
-    //                      'label' => $resolution['label'],
-    //                 ]
-    //            ];
-    //       });
-    //  }
+          $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound');
+          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound');
+          return $responseTime->map(function ($response) use ($resolutionTime) {
+               $resolution = $resolutionTime->where('date', $response['date'])->first();
+               return [
+                    'date' => $response['date'],
+                    'response' => (object) [
+                         'value' => $response['frt'],
+                         'label' => $response['label'],
+                    ],
+                    'resolution' => (object) [
+                         'value' => $resolution['frt'],
+                         'label' => $resolution['label'],
+                    ]
+               ];
+          });
+     }
 
-    //  public function kpiTicketChannel2(Request $request, DashboardTicketService $dashboardTicketService)
-    //  {
-    //       $channels = [
-    //            [
-    //                 "label" => "Voice PSTN",
-    //                 "color" => "#F94144",
-    //                 "source" => ['From SIP', 'From Incoming SIP']
-    //            ],
-    //            [
-    //                 "label" => "Web Call",
-    //                 "color" => "#2D9CDB",
-    //                 "source" => ['From Web']
-    //            ],
-    //            [
-    //                 "label" => "Web Chat",
-    //                 "color" => "#F8961E",
-    //                 "source" => ['From Web']
-    //            ],
-    //            [
-    //                 "label" => "Web Bot",
-    //                 "color" => "#F9C74F",
-    //                 "source" => ['From Web Bot']
-    //            ],
-    //            [
-    //                 "label" => "Whatsapp",
-    //                 "color" => "#90BE6D",
-    //                 "source" => ['From Whatsapp']
-    //            ],
-    //            [
-    //                 "label" => "Whatsapp Bot",
-    //                 "color" => "#F3722C",
-    //                 "source" => ['From Whatsapp Bot']
-    //            ],
-    //            [
-    //                 "label" => "Email",
-    //                 "color" => "#7A7E80",
-    //                 "source" => ['From Email']
-    //            ],
-    //            [
-    //                 "label" => "Instagram",
-    //                 "color" => "#E99C00",
-    //                 "source" => ['From Instagram']
-    //            ],
-    //            [
-    //                 "label" => "Facebook",
-    //                 "color" => "#E4BEBE",
-    //                 "source" => ['From Facebook']
-    //            ],
-    //            [
-    //                 "label" => "Kontakami",
-    //                 "color" => "#3942B7",
-    //                 "source" => ['From Kontakami']
-    //            ],
-    //            [
-    //                 "label" => "Walk-In",
-    //                 "color" => "#C6BD48",
-    //                 "source" => ['From Walk-In']
-    //            ]
-    //       ];
+     public function kpiTicketChannel2(Request $request, DashboardTicketService $dashboardTicketService)
+     {
+          $channels = [
+               [
+                    "label" => "Voice PSTN",
+                    "color" => "#F94144",
+                    "source" => ['From SIP', 'From Incoming SIP']
+               ],
+               [
+                    "label" => "Web Call",
+                    "color" => "#2D9CDB",
+                    "source" => ['From Web']
+               ],
+               [
+                    "label" => "Web Chat",
+                    "color" => "#F8961E",
+                    "source" => ['From Web']
+               ],
+               [
+                    "label" => "Web Bot",
+                    "color" => "#F9C74F",
+                    "source" => ['From Web Bot']
+               ],
+               [
+                    "label" => "Whatsapp",
+                    "color" => "#90BE6D",
+                    "source" => ['From Whatsapp']
+               ],
+               [
+                    "label" => "Whatsapp Bot",
+                    "color" => "#F3722C",
+                    "source" => ['From Whatsapp Bot']
+               ],
+               [
+                    "label" => "Email",
+                    "color" => "#7A7E80",
+                    "source" => ['From Email']
+               ],
+               [
+                    "label" => "Instagram",
+                    "color" => "#E99C00",
+                    "source" => ['From Instagram']
+               ],
+               [
+                    "label" => "Facebook",
+                    "color" => "#E4BEBE",
+                    "source" => ['From Facebook']
+               ],
+               [
+                    "label" => "Kontakami",
+                    "color" => "#3942B7",
+                    "source" => ['From Kontakami']
+               ],
+               [
+                    "label" => "Walk-In",
+                    "color" => "#C6BD48",
+                    "source" => ['From Walk-In']
+               ]
+          ];
 
 
-    //       $user = user();
-    //       $currentDate = now();
-    //       $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $dates = array(date('2024-09-11'));
+          $tickets = $dashboardTicketService->findAllTicketCategoryBySource($user, $dates, 'inbound');
+          return collect($channels)->map(function ($channel) use ($tickets) {
+               $ticket = $tickets->whereIn('source', $channel['source'])
+                    ->when($channel['label'] == "Web Call", fn($query) => $query->whereNotNull('call_id'))
+                    ->when($channel['label'] == "Web Chat", fn($query) => $query->whereNotNull('chat_id'));
+               return [
+                    ...$channel,
+                    'total' => $ticket->sum('total_ticket')
+               ];
+          });
+     }
 
-    //       $tickets = $dashboardTicketService->findAllTicketCategoryBySource($user, $dates, 'inbound');
-    //       return collect($channels)->map(function ($channel) use ($tickets) {
-    //            $ticket = $tickets->whereIn('source', $channel['source'])
-    //                 ->when($channel['label'] == "Web Call", fn($query) => $query->whereNotNull('call_id'))
-    //                 ->when($channel['label'] == "Web Chat", fn($query) => $query->whereNotNull('chat_id'));
-    //            return [
-    //                 ...$channel,
-    //                 'total' => $ticket->sum('total_ticket')
-    //            ];
-    //       });
-    //  }
+     public function kpiVoicePstn2(Request $request, YeastarApi $yeastarApi)
+     {
 
-    //  public function kpiVoicePstn2(Request $request, YeastarApi $yeastarApi)
-    //  {
+          $user = user();
+          $companyId = $user->company_id;
 
-    //       $user = user();
-    //       $companyId = $user->company_id;
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $startDate = date('d/m/Y',strtotime($dates[0])). " 00:00:00";
+          $endDate = date('d/m/Y',strtotime($dates[count($dates)-1]))." 23:59:59";
 
-    //       $currentDate = now();
-    //       $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-    //       $startDate = date('d/m/Y',strtotime($dates[0])). " 00:00:00";
-    //       $endDate = date('d/m/Y',strtotime($dates[count($dates)-1]))." 23:59:59";
-
-    //       return $yeastarApi->getAbaddonMissedCall($companyId,$startDate,$endDate);
-    //  }
+          return $yeastarApi->getAbaddonMissedCall($companyId,$startDate,$endDate);
+     }
 
      public function kpiWebCall2(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $dates = array(date('2024-09-26'));
           $missedCall = $dashboardTicketService->findAllMissedCall($user, $dates);
           return [$missedCall];
      }
@@ -240,5 +241,16 @@ trait InboundTeamPerformance
                     'color' => $color,
                ];
           });
+     }
+     public function topClosedCampaignAgent2(Request $request, DashboardTicketService $dashboardTicketService)
+     {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          $dates = array(date('2024-05-02'));
+          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, [
+               'campaign_id' => $request->campaign_id,
+               'product_id' => $request->product_id
+          ]);
      }
 }

@@ -11,7 +11,9 @@
                 >
                     <CardTicketPerformance :period="period" />
                 </ul>
-                <ChartPieTicketAllChannelTeamPerformance :period="period" />
+                <div class="grid md:grid-cols-2 lg:grid-cols-2 md:gap-2 mt-3">
+                    <ChartPieTicketAllChannelTeamPerformance :period="period" />
+                </div>
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3">
                 <h1 class="font-krub-bold text-[13px] mb-1">
@@ -39,7 +41,7 @@ import CardTicketPerformance from "@/Components/Card/Inbound/CardTicketPerforman
 import ChartPieTicketAllChannelTeamPerformance from "@/Components/Chart/Inbound/ChartPieTicketAllChannelTeamPerformance.vue";
 import { ref } from "vue";
 import { getQueryParam, routeAppendParam } from "@/Plugins/Function/global-function";
-import CardAgentDeal from "@/Components/Card/Outbound/CardAgentDeal.vue";
+import CardAgentDeal from "@/Components/Card/Inbound/CardAgentDeal.vue";
 
 const props = defineProps(["products"]);
 const period = ref(getQueryParam("period", "today"));
