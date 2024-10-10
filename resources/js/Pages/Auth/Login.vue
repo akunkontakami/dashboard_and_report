@@ -146,7 +146,7 @@ const submit = () => {
     if (!form.processing) {
         form.post(route("auth.login.store"), {
             onSuccess: () => {
-                joinConnectionBroadcast();
+                 joinConnectionBroadcast();
             },
         });
     }

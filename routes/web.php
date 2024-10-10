@@ -35,8 +35,8 @@ Route::middleware(['me-auth', 'idle-logout'])
      ->group(function () {
           Route::get('/logout', [AuthLoginController::class, 'logout'])->name('auth.logout');
 
-          Route::get("/dashboard/inbound/{type}", [InboundDashboardController::class, "index"])->name("dashboard.inbound.index")->whereIn('type', ['live-daily', 'kpi']);
-          Route::get("/dashboard/outbound/{type}", [OutboundDashboardController::class, "index"])->name("dashboard.outbound.index")->whereIn('type', ['marketing-campaign', 'product']);
+          Route::get("/dashboard/inbound/{type}", [InboundDashboardController::class, "index"])->name("dashboard.inbound.index")->whereIn('type', ['live-daily', 'kpi','team-performance','sla','escalation-performance']);
+          Route::get("/dashboard/outbound/{type}", [OutboundDashboardController::class, "index"])->name("dashboard.outbound.index")->whereIn('type', ['marketing-campaign', 'product', 'salescalls']);
 
           Route::get('/report/inbound/{category}', [InboundReportController::class, 'index'])->name('report.inbound.index');
           Route::get('/report/outbound/{category}', [OutboundReportController::class, 'index'])->name('report.outbound.index');

@@ -54,7 +54,7 @@ class LoginAction
                     'code' => $companyUser?->code,
                     'profile' => asset($companyUser?->profile ?: $user->profile),
                ],
-               'company_name' => $companyName, 
+               'company_name' => $companyName,
                'company' => (object)[
                     'id' => $companyId,
                     'name' => $companyName
@@ -96,6 +96,7 @@ class LoginAction
                     ->where('email', $email)
                     ->first();
 
+            // dd($companyAccount->company);
                if (!$companyAccount) {
                     if ($role === 'admin') {
                          $adminByEmail = User::where('role', Role::Admin)
