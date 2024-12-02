@@ -26,5 +26,17 @@ const menus = ref([
         id: "kpi",
         name: "KPI",
     },
+    {
+        id: "team-performance",
+        name: "Team Performance",
+    },
+    {
+        id: "sla",
+        name: "SLA",
+    },
+    {
+        id: "escalation-performance",
+        name: "Escalation Performance",
+    },
 ]);
 </script>

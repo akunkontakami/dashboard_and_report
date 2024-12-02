@@ -8,9 +8,13 @@
             v-if="type == 'marketing-campaign'"
             :campaigns="campaigns"
         />
-        <Product 
+        <Product
             v-if="type == 'product'"
             :products="products"
+        />
+        <SalesCalls
+            v-if="type == 'salescalls'"
+            :salescalls="salescalls"
         />
     </AppLayout>
 </template>
@@ -20,6 +24,7 @@ import TabCategory from "../TabCategory.vue";
 import TabMenu from "./TabMenu.vue";
 import MarketingCampaign from "./MarketingCampaign.vue";
 import Product from "./Product.vue";
+import SalesCalls from "./SalesCalls.vue";
 
-defineProps(["type", "campaigns", "products"]);
+defineProps(["type", "campaigns", "products", "salescalls"]);
 </script>

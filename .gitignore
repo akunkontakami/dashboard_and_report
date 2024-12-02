@@ -1,13 +1,17 @@
 /.phpunit.cache
 /node_modules
-/public/build
+# /public/build
 /public/hot
+/app/Http/Controllers/Auth
+/public/build/assets
 /public/storage
 /storage/*.key
 /vendor
 .env
 .env.backup
 .env.production
+.env.exampledevel
+.env.exampleprod
 Homestead.json
 Homestead.yaml
 auth.json

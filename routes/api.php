@@ -49,15 +49,26 @@ Route::middleware(['me-auth', 'idle-logout'])
                     Route::get('kpi/web-call', 'kpiWebCall')->name('kpi.web-call');
                     Route::get('kpi/csat', 'kpiCsat')->name('kpi.csat');
                     Route::get('kpi/ticket-status/chart', 'kpiTicketStatusChart')->name('kpi.ticket-status.chart');
+
+                    Route::get('team-performance/ticket-status', 'kpiTicketStatus2')->name('team-performance.ticket-status2');
+                    Route::get('team-performance/ticket-status/chart', 'kpiTicketStatusChart2')->name('team-performance.ticket-status.chart2');
+                    Route::get('team-performance/ticket-channel', 'kpiTicketChannel2')->name('team-performance.ticket-channel');
+                    Route::get('team-performance/web-call', 'kpiWebCall2')->name('team-performance.web-call');
+                    Route::get('team-performance/csat', 'kpiCsat2')->name('team-performance.csat');
+
+                    Route::get('team-performance/top-closed', 'topClosedCampaignAgent2')->name('campaign.top-closed');
                });
 
           Route::controller(OutboundDashboardController::class)
                ->as('dashboard.outbound.data.')
                ->prefix("dashboard/outbound")
                ->group(function () {
+                    Route::get('live-daily/ticket-solved', 'liveDailyTicketSolved2')->name('live-daily.ticket-solved2');
+                    Route::get('live-daily/card', 'liveDailyCard2')->name('live-daily.card2');
                     Route::get('campaign/chart-campaign', 'chartCampaign')->name('campaign.chart-campaign');
                     Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('campaign.top-closed');
                     Route::get('campaign/ticket-by-type', 'ticketByTypeCampaign')->name('campaign.ticket-by-type');
+                    Route::get('kpi/sla-time', 'kpiSlaTime2')->name('kpi.sla-time2');
                });
 
 

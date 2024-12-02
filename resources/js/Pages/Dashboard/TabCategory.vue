@@ -14,11 +14,11 @@
          </Link>
      </span>
  </template>
- 
+
  <script lang="ts" setup>
  import { Link } from "@inertiajs/vue3";
  defineProps(['tab'])
- 
+
  const menus = [
      {
          key: "inbound",
@@ -29,9 +29,14 @@
      {
          key: "outbound",
          name: "Outbound",
-         url: route("dashboard.outbound.index","marketing-campaign"),
+         url: route("dashboard.outbound.index","salescalls"),
          show: true,
      },
+    //  {
+    //      key: "outbound",
+    //      name: "Outbound",
+    //      url: route("dashboard.outbound.index","marketing-campaign"),
+    //      show: true,
+    //  },
  ];
  </script>
- 

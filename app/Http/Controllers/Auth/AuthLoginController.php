@@ -17,7 +17,7 @@ class AuthLoginController extends Controller
         if(user()){
             return to_route('dashboard.inbound.index',"live-daily");
         }
-        
+
         $menus = [
             [
                 'label' => 'Login to Admin',
@@ -37,7 +37,7 @@ class AuthLoginController extends Controller
             [
                 'label' => 'Login to Dashboard',
                 'description' => 'Dashboard and Report for All Roles',
-                'url' => 'https://report.kontakami.com/'
+                'url' => 'https://127.0.0.1:8000'
             ],
             // [
             //     'label' => 'Login to Kontakami',
