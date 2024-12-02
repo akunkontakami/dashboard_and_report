@@ -45,7 +45,7 @@
                 <Td class="whitespace-nowrap">
                     <a
                         href="javascript:;"
-                        class="text-[#F6A500] font-krub-semibold text-[12px] underline relative z-10"
+                        class="text-yellow font-krub-semibold text-[12px] underline relative z-10"
                         x-on:click="popupDescription=true"
                         @click.stop="showSubject(row.subject?.name || '-')"
                     >

@@ -123,23 +123,23 @@ const form = useForm({
 const roles = ref([
     {
         type: "ba",
-        text: "Business Account - Superadmin",
+        text: "Superadmin",
     },
     {
         type: "admin",
-        text: "Business Account - Admin",
+        text: "Admin",
     },
     {
         type: "am",
-        text: "AM",
+        text: "Account Manager - I/O & Escalation",
     },
     {
         type: "spv",
-        text: "Supervisor",
+        text: "Supervisor - I/O",
     },
     {
         type: "spv_escalation",
-        text: "Escalation SPV",
+        text: "Supervisor - Escalation",
     },
 ]);
 const submit = () => {

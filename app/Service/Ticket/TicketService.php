@@ -42,7 +42,7 @@ class TicketService
                $statusColor = in_array($row->status, ['New', 'From Bot', 'From Whatsapp Bot']) ? 'bg-offline' : match ($row->status_category) {
                     'Closed' => 'bg-online',
                     'Solved' => 'bg-blue',
-                    'Open' => 'bg-yellow',
+                    'Open' => 'bg-kuning',
                     'New' => 'bg-offline',
                     default => 'bg-online',
                };

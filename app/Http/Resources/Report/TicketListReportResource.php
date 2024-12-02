@@ -23,7 +23,7 @@ class TicketListReportResource extends JsonResource
         $statusColor = in_array($status,['New','From Bot','From Whatsapp Bot']) ? 'bg-offline' : match ($this->status_category) {
             'Closed' => 'bg-online',
             'Solved' => 'bg-blue',
-            'Open' => 'bg-yellow',
+            'Open' => 'bg-kuning',
             'New' => 'bg-offline',
             default => 'bg-online',
         };
@@ -35,7 +35,7 @@ class TicketListReportResource extends JsonResource
             'helpdesk_name' => $this->product_category == 'Other' ? 'Other' : $this->helpdesk_name,
             'priority_color' => match ($this->priority) {
                 'Low' => 'bg-online',
-                'Medium' => 'bg-yellow',
+                'Medium' => 'bg-kuning',
                 'High' => 'bg-offline',
                 'Critical' => 'bg-offline',
                 'Urgent' => 'bg-offline',

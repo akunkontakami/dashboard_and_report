@@ -1,6 +1,6 @@
 <template>
     <header
-        class="bg-white w-full border-b p-4 py-2 z-[10] sticky flex flex-col top-0"
+        class="bg-white w-full border-b p-4 py-2 z-20 sticky flex flex-col top-0"
         v-if="user"
         x-data="{confirmation:false}"
     >
@@ -41,7 +41,7 @@
                                 class="text-[12px] line-clamp-1"
                                 id="header-user-name"
                             >
-                                {{ user.name }}
+                                {{ user.user_company.name }}
                             </b>
                             <p class="text-[9px]">
                                 <span v-if="user.company_name">
@@ -53,8 +53,8 @@
                             </p>
                         </div>
                         <img
-                            :src="user.avatar"
-                            :alt="user.name"
+                            :src="user.user_company.profile"
+                            :alt="user.user_company.name"
                             id="header-user-profile"
                             class="w-[30px] h-[30px] rounded-full object-cover border"
                         />
