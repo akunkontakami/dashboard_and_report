@@ -263,8 +263,8 @@ const broadcastResponse = ref(["Yes", "No"]);
 const callOrigin = ref([
     "From Web",
     "From SIP",
-    // "From Whatsapp Bot",
-    "From Chat Bot",
+    "From Whatsapp Bot",
+    "From Web Bot",
     "From Email",
     "From Incoming SIP",
     "From Whatsapp",

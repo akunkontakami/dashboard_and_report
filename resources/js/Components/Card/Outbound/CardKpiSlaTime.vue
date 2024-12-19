@@ -39,7 +39,7 @@
      loading.value = true;
      axios
          .get(
-             route("dashboard.outbound.data.kpi.sla-time", {
+             route("dashboard.outbound.data.salescall.sla-time", {
                  periode: props.period,
              })
          )

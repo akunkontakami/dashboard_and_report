@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers\Dashboard\Data;
-
+use App\Helpers\YeastarApi;
 use App\Helpers\Yellow;
 use App\Service\Ticket\DashboardTicketServiceOutbond;
 use App\Service\Utility\UtilityService;
@@ -13,10 +13,10 @@ trait OutboundLiveDailyData
      {
          $currentDate = now();
          $user = user();
-        //  $today = $currentDate->clone()->format('Y-m-d');
-        //  $yesterday = $currentDate->subDays(1)->format('Y-m-d');
-         $today = $currentDate->clone()->format('Y-09-17');
-         $yesterday = $currentDate->subDays(1)->format('Y-09-01');
+         $today = $currentDate->clone()->format('Y-m-d');
+         $yesterday = $currentDate->subDays(1)->format('Y-m-d');
+        //  $today = $currentDate->clone()->format('Y-09-17');
+        //  $yesterday = $currentDate->subDays(1)->format('Y-09-01');
         //   dd($yesterday);
         //  dd('halo');
 
@@ -50,9 +50,30 @@ trait OutboundLiveDailyData
      {
 
           $user = user();
-        //   $currentDate = now()->format('Y-m-d');
-          $currentDate = now()->format('2024-09-17');
-          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, [$currentDate, $currentDate], "inbound", 10);
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+        //   $currentDate = now()->format('2024-03-26');
+          return $dashboardTicketService->findTopSolvedClosedTicketAgentSalescall($user, $dates, "outbound", 10);
+     }
+
+     public function liveDailyTicketSolvedClosed(Request $request, DashboardTicketServiceOutbond $dashboardTicketService)
+     {
+
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+        //   $currentDate = now()->format('2024-03-26');
+          return $dashboardTicketService->findTopSolvedClosedTicketAgentClosedSalescall($user, $dates, "outbound", 10);
+     }
+
+     public function liveDailyTicketSolvedAverage(Request $request, DashboardTicketServiceOutbond $dashboardTicketService)
+     {
+
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+        //   $currentDate = now()->format('2024-03-26');
+          return $dashboardTicketService->findTopSolvedClosedTicketAgentAverageSalescall($user, $dates, "outbound", 10);
      }
 
      public function liveDailyFirstResponseTime(Request $request, UtilityService $utilityService, DashboardTicketServiceOutbond $dashboardTicketService)

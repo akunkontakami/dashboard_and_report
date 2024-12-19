@@ -52,11 +52,16 @@ Route::middleware(['me-auth', 'idle-logout'])
 
                     Route::get('team-performance/ticket-status', 'kpiTicketStatus2')->name('team-performance.ticket-status2');
                     Route::get('team-performance/ticket-status/chart', 'kpiTicketStatusChart2')->name('team-performance.ticket-status.chart2');
-                    Route::get('team-performance/ticket-channel', 'kpiTicketChannel2')->name('team-performance.ticket-channel');
+                    Route::get('team-performance/ticket-channel', 'kpiTicketChannelTeamPerformance')->name('team-performance.ticket-channel');
                     Route::get('team-performance/web-call', 'kpiWebCall2')->name('team-performance.web-call');
                     Route::get('team-performance/csat', 'kpiCsat2')->name('team-performance.csat');
 
-                    Route::get('team-performance/top-closed', 'topClosedCampaignAgent2')->name('campaign.top-closed');
+                    Route::get('team-performance/top-closed', 'topClosedCampaignAgentTeamPerformance')->name('team-performance.top-closed');
+
+                    Route::get('escalation/ticket-status', 'kpiTicketStatusEscalation')->name('escalation.ticket-status');
+                    Route::get('escalation/ticket-channel', 'kpiTicketChannelEscalation')->name('escalation.ticket-channel');
+                    Route::get('escalation/web-call', 'kpiWebCallEscalation')->name('escalation.web-call');
+                    Route::get('escalation/top-closed', 'topClosedCampaignAgentEscalation')->name('escalation.top-closed');
                });
 
           Route::controller(OutboundDashboardController::class)
@@ -64,11 +69,14 @@ Route::middleware(['me-auth', 'idle-logout'])
                ->prefix("dashboard/outbound")
                ->group(function () {
                     Route::get('live-daily/ticket-solved', 'liveDailyTicketSolved2')->name('live-daily.ticket-solved2');
+                    Route::get('salescall/ticket-Closed', 'liveDailyTicketSolvedClosed')->name('salescall.agentclosed');
+                    Route::get('salescall/ticket-Average', 'liveDailyTicketSolvedAverage')->name('salescall.agentaverage');
                     Route::get('live-daily/card', 'liveDailyCard2')->name('live-daily.card2');
                     Route::get('campaign/chart-campaign', 'chartCampaign')->name('campaign.chart-campaign');
-                    Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('campaign.top-closed');
+                    Route::get('campaign/top-closed', 'topClosedCampaignAgent')->name('team-performance.top-closed');
                     Route::get('campaign/ticket-by-type', 'ticketByTypeCampaign')->name('campaign.ticket-by-type');
-                    Route::get('kpi/sla-time', 'kpiSlaTime2')->name('kpi.sla-time2');
+                    Route::get('salescall/sla-time', 'kpiSlaTimeSalescall')->name('salescall.sla-time');
+
                });
 
 

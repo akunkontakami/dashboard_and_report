@@ -53,30 +53,8 @@ trait InboundTeamPerformance
           });
      }
 
-     public function kpiSlaTime2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
-     {
-          $user = user();
-          $currentDate = now();
-          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $totalDay = count($dates);
 
-          $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
-          $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
-          $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
-          $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
-          return [
-               [
-                    "name" => "average first response time",
-                    "total" => Yellow::minuteToSla(round($responseTime / $totalDay))
-               ],
-               [
-                    "name" => "average first resolution time",
-                    "total" => Yellow::minuteToSla(round($resolutionTime / $totalDay))
-               ]
-          ];
-     }
-
-     public function kpiTicketActivity2(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketActivityTeamPerformance(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
@@ -84,7 +62,7 @@ trait InboundTeamPerformance
           return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
      }
 
-     public function kpiSlaChart2(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
+     public function kpiSlaChartTeamPerformance(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
@@ -111,7 +89,7 @@ trait InboundTeamPerformance
           });
      }
 
-     public function kpiTicketChannel2(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketChannelTeamPerformance(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $channels = [
                [
@@ -175,7 +153,7 @@ trait InboundTeamPerformance
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $dates = array(date('2024-09-11'));
+        //   $dates = array(date('2024-09-11'));
           $tickets = $dashboardTicketService->findAllTicketCategoryBySource($user, $dates, 'inbound');
           return collect($channels)->map(function ($channel) use ($tickets) {
                $ticket = $tickets->whereIn('source', $channel['source'])
@@ -188,7 +166,7 @@ trait InboundTeamPerformance
           });
      }
 
-     public function kpiVoicePstn2(Request $request, YeastarApi $yeastarApi)
+     public function kpiVoicePstnTeamPerformance(Request $request, YeastarApi $yeastarApi)
      {
 
           $user = user();
@@ -207,7 +185,7 @@ trait InboundTeamPerformance
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $dates = array(date('2024-09-26'));
+        //   $dates = array(date('2024-09-26'));
           $missedCall = $dashboardTicketService->findAllMissedCall($user, $dates);
           return [$missedCall];
      }
@@ -231,7 +209,7 @@ trait InboundTeamPerformance
           $currentDate = now();
             // dd($currentDate);
           $dates = Yellow::getDateRangeByPeriodTeamPerformance($currentDate, $request->get('periode', 'today'));
-          $dates = array(date('2024-09-11'));
+        //   $dates = array(date('2024-09-11'));
         //   $dates= $dt->toDateTimeString();
             // dd($dates);
           return $dashboardTicketService->findAllTicketByStatusCategoryTeamPerformance($user, $dates, 'inbound')->map(function($row) use($colors){
@@ -242,15 +220,12 @@ trait InboundTeamPerformance
                ];
           });
      }
-     public function topClosedCampaignAgent2(Request $request, DashboardTicketService $dashboardTicketService)
+     public function topClosedCampaignAgentTeamPerformance(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          $dates = array(date('2024-05-02'));
-          return $dashboardTicketService->findTopSolvedClosedTicketAgent($user, $dates, "outbound", 5, [
-               'campaign_id' => $request->campaign_id,
-               'product_id' => $request->product_id
-          ]);
+        //   $dates = array(date('2024-07-08'));
+          return $dashboardTicketService->findTopSolvedClosedTicketAgentTeamPerformance($user, $dates, "outbound", 5);
      }
 }

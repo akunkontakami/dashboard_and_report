@@ -29,7 +29,7 @@ trait OutboundCampaignData
           if($isProduct){
                $close_deal = $data?->utilized ?: 0;
           }
-          
+
           $totalTicketStatus = count($ticketByStatus);
           $higher = [
                "label" => "Avg. Call Attempt",
@@ -58,7 +58,7 @@ trait OutboundCampaignData
           ];
      }
 
-     
+
 
      public function topClosedCampaignAgent(Request $request, DashboardTicketService $dashboardTicketService)
      {
@@ -82,6 +82,7 @@ trait OutboundCampaignData
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+          //$dates = array(date('2024-09-10'));
           return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'outbound',[
                'campaign_id' => $request->campaign_id,
                'product_id' => $request->product_id

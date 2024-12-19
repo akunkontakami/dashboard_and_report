@@ -5,11 +5,6 @@ export interface User {
     role: string;
     avatar: string;
     company_name?:string
-    user_company : {
-        name : string
-        code : string
-        profile : string
-    }
 }
 
 export type PageProps<T extends Record<string, unknown> = Record<string, unknown>> = T & {
