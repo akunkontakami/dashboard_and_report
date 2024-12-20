@@ -20,7 +20,7 @@
                     Top 5 Agents by Close Deals
                 </h1>
                 <ul class="flex flex-col gap-2 flex-1">
-                    <CardAgentDeal :period="period" :productId="productId" />
+                    <CardAgentDealTeamPerformance :period="period" :productId="productId" />
                 </ul>
             </div>
         </div>
@@ -41,7 +41,7 @@ import CardTicketPerformance from "@/Components/Card/Inbound/CardTicketPerforman
 import ChartPieTicketAllChannelTeamPerformance from "@/Components/Chart/Inbound/ChartPieTicketAllChannelTeamPerformance.vue";
 import { ref } from "vue";
 import { getQueryParam, routeAppendParam } from "@/Plugins/Function/global-function";
-import CardAgentDeal from "@/Components/Card/Inbound/CardAgentDeal.vue";
+import CardAgentDealTeamPerformance from "@/Components/Card/Inbound/CardAgentDealTeamPerformance.vue";
 
 const props = defineProps(["products"]);
 const period = ref(getQueryParam("period", "today"));

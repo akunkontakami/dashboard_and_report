@@ -18,8 +18,9 @@
 import VueApexCharts from "vue3-apexcharts";
 import axios from "axios";
 import EmptyState from "../../Icon/Etc/EmptyState.vue";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 
+const props = defineProps(["period"]);
 const loading = ref(true);
 const haveData = ref(false)
 const chart: any = ref(null);
@@ -91,15 +92,19 @@ const chartConfig = {
         },
     ],
 };
-const fetchLiveDailyCard = () => {
+const fetchData = () => {
     loading.value = true;
     axios
-        .get(route("dashboard.outbound.data.live-daily.ticket-solved2"))
+        .get(
+            route("dashboard.outbound.data.live-daily.ticket-solved2", {
+                 periode: props.period,
+             })
+            )
         .then((result) => {
-            console.log('nilai dari res',result);
+            loading.value = false;
+            console.log('nilai dari res agentClose',result);
 
             const items = result.data;
-            loading.value = false;
             chartConfig.series[0] = {
                 name: "Total",
                 data: items.map((row: any) => row.total),
@@ -115,6 +120,12 @@ const fetchLiveDailyCard = () => {
 };
 
 onMounted(() => {
-    fetchLiveDailyCard();
+    fetchData();
 });
+watch(
+     () => props.period,
+     (periode, value) => {
+        fetchData();
+     }
+ );
 </script>

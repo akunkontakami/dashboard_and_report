@@ -7,45 +7,49 @@
             <div class="col-span-3">
                 <h1 class="font-krub-bold text-[13px] mb-1">Ticket Status</h1>
                 <ul
-                    class="grid lg:grid-cols-4 md:grid-cols-3 grid-cols-2 gap-2 list-none"
+                    class="grid lg:grid-cols-4 md:grid-cols-4 grid-cols-2 gap-2 list-none"
                 >
-                    <CardKpiTicketStatus :period="period" />
+                    <CardTicketEscalation :period="period" />
                 </ul>
+                <div class="grid md:grid-cols-2 lg:grid-cols-2 md:gap-2 mt-3">
+                    <ChartPieTicketAllChannelEscalation :period="period" />
+                </div>
             </div>
             <div class="md:col-span-2 w-full md:mt-0 mt-3">
                 <h1 class="font-krub-bold text-[13px] mb-1">
-                    First Response Time & First Resolution Time
+                    Top 5 Divisions by Solved Tickets
                 </h1>
-                <ul
-                    class="grid lg:grid-cols-2 sm:grid-cols-2 grid-cols-1 gap-2 list-none"
-                >
-                    <CardKpiSlaTime :period="period" />
+                <ul class="flex flex-col gap-2 flex-1">
+                    <CardAgentDealEscalation :period="period" :productId="productId" />
                 </ul>
             </div>
         </div>
 
 
-        <div class="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 gap-2 mt-3">
-            <ChartPieTicketAllChannel :period="period" />
-        </div>
 
     </section>
 </template>
 <script setup lang="ts">
 import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
-import InboundKpiTicketByType from "@/Components/Chart/Inbound/InboundKpiTicketByType.vue";
-import CardKpiTicketStatus from "@/Components/Card/Inbound/CardKpiTicketStatus.vue";
-import InboundKpiDailyActivityChart from "@/Components/Chart/Inbound/InboundKpiDailyActivityChart.vue";
-import InboundKpiSlaChart from "@/Components/Chart/Inbound/InboundKpiSlaChart.vue";
-import ChartPieTicketAllChannel from "@/Components/Chart/Inbound/ChartPieTicketAllChannel.vue";
-import CardKpiSlaTime from "@/Components/Card/Inbound/CardKpiSlaTime.vue";
+import CardTicketEscalation from "@/Components/Card/Inbound/CardTicketEscalation.vue";
+import ChartPieTicketAllChannelEscalation from "@/Components/Chart/Inbound/ChartPieTicketAllChannelEscalation.vue";
 import { ref } from "vue";
 import { getQueryParam, routeAppendParam } from "@/Plugins/Function/global-function";
+import CardAgentDealEscalation from "@/Components/Card/Inbound/CardAgentDealEscalation.vue";
 
-const period = ref(getQueryParam('period',"today"));
+const props = defineProps(["products"]);
+const period = ref(getQueryParam("period", "today"));
+const productId = ref(getQueryParam("product_id"));
 
 const updatePeriode = (value: string) => {
     routeAppendParam({ period: value });
     period.value = value;
+    productId.value = value
+};
+const init = () => {
+    const products = props.products;
+    if (products.length) {
+        productId.value = products[0].id;
+    }
 };
 </script>

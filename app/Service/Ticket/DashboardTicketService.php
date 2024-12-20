@@ -217,9 +217,18 @@ class DashboardTicketService
                     $join->on("st.id", "tickets.status_id");
                     $join->on("st.table_name", "tickets.status_table");
                })
-               ->leftJoin("company_users", function ($join) {
-                    $join->on("company_users.company_id", "tickets.company_id");
-                    $join->on("company_users.user_id", "tickets.current_agent_id");
+
+               ->Join("calls", function ($join) {
+                    $join->on("tickets.call_id", "calls.id");
+
+               })
+               ->Join("call_logs", function ($join) {
+                    $join->on("call_logs.call_id", "calls.id");
+
+               })
+               ->Join("company_users", function ($join) {
+                    $join->on("call_logs.user_id", "company_users.user_id");
+
                })
                ->select([
                     'tickets.current_agent_id',
@@ -233,6 +242,112 @@ class DashboardTicketService
                // ->whereNull('tickets.marketing_campaign_id')
                ->when($campaignId, fn($query) => $query->where('tickets.marketing_campaign_id', $campaignId))
                ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->where(function ($query) {
+                    $query->whereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
+               })
+               ->groupBy(["tickets.current_agent_id", "company_users.name", "company_users.profile"])
+               ->orderBy("total", "desc")
+               ->take($top)
+               ->get();
+          $items = $result->toArray();
+          $totalData = $result->count();
+          if ($totalData < $top && $totalData && $type == 'inbound') {
+               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
+                    'current_agent_id' => null,
+                    'name' => "#",
+                    'total' => 0
+               ]);
+               $items = [
+                    ...$items,
+                    ...$appends
+               ];
+          }
+          return $items;
+     }
+
+     public function findTopSolvedClosedTicketAgentEscalation($user, $dates, $type, $top = 10)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $result = $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoin("company_users", function ($join) {
+                    $join->on("company_users.company_id", "tickets.company_id");
+                    $join->on("company_users.user_id", "tickets.current_agent_id");
+               })
+               ->select([
+                    'tickets.current_agent_id',
+                    'company_users.name',
+                    'company_users.profile',
+                    DB::raw("sum(case when st.status_category in ('Closed','Solved') or tickets.status in ('Closed','Auto Closed','Solved') then 1 else 0 end) as total"),
+                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
+               ])
+               ->where('tickets.company_id', $companyId)
+            //    ->where('tickets.type', $type)
+               ->where('tickets.type', 'inbound')
+               // ->whereNull('tickets.marketing_campaign_id')
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->where(function ($query) {
+                    $query->whereIn('st.status_category', ["Solved", "Closed"]);
+                    $query->orWhereIn('tickets.status', ["Solved", "Auto Closed"]);
+               })
+               ->groupBy(["tickets.current_agent_id", "company_users.name", "company_users.profile"])
+               ->orderBy("total", "desc")
+               ->take($top)
+               ->get();
+          $items = $result->toArray();
+          $totalData = $result->count();
+          if ($totalData < $top && $totalData && $type == 'inbound') {
+               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
+                    'current_agent_id' => null,
+                    'name' => "#",
+                    'total' => 0
+               ]);
+               $items = [
+                    ...$items,
+                    ...$appends
+               ];
+          }
+          return $items;
+     }
+
+     public function findTopSolvedClosedTicketAgentTeamPerformance($user, $dates, $type, $top = 10)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $result = $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoin("company_users", function ($join) {
+                    $join->on("company_users.company_id", "tickets.company_id");
+                    $join->on("company_users.user_id", "tickets.current_agent_id");
+               })
+               ->select([
+                    'tickets.current_agent_id',
+                    'company_users.name',
+                    'company_users.profile',
+                    DB::raw("sum(case when st.status_category in ('Closed','Solved') or tickets.status in ('Closed','Auto Closed','Solved') then 1 else 0 end) as total"),
+                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
+               ])
+               ->where('tickets.company_id', $companyId)
+            //    ->where('tickets.type', $type)
+               ->where('tickets.type', 'inbound')
+               // ->whereNull('tickets.marketing_campaign_id')
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->where(function ($query) {
                     $query->whereIn('st.status_category', ["Solved", "Closed"]);
@@ -542,6 +657,74 @@ class DashboardTicketService
                ->orderByRaw("count(tickets.status) desc")
                ->get();
      }
+     public function findAllTicketByStatusCategorysalescall($user, $dates, $type)
+     {
+         $companyId = $user->company_id;
+          $subJoinTicketHistory = DB::table('ticket_histories')
+               ->join('users', 'ticket_histories.agent_id', 'users.id')
+               ->selectRaw("ticket_histories.ticket_id,count(ticket_histories.id) as call_attempt")
+               ->whereNotIn('users.role', ['agent_escalation'])
+               ->groupBy("ticket_histories.ticket_id");
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
+               ->select([
+                    DB::raw("sum(h.call_attempt) as total"),
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               // ->whereNull('tickets.escalation_team_id')
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->first();
+
+     }
+
+     public function findOutgoingCallsSalescall($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->select([
+
+                    DB::raw("count(tickets.status) as total")
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.status','!=' ,'New')
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->orderByRaw("count(tickets.status) desc")
+               ->first();
+     }
+
+     public function findFrequencyperleadSalescall($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+
+
+          return $this->call::query()
+               ->select([
+                    DB::raw("sum(calls.total_duration) as total")
+               ])
+               ->where('calls.company_id', $companyId)
+               ->where("calls.source_category", $type)
+               ->whereRaw("date(calls.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->get()->first();
+     }
 
      public function findAllTicketByStatusCategoryTeamPerformance($user, $dates, $type, $filter = [])
      {
@@ -613,6 +796,39 @@ class DashboardTicketService
                // ->whereNull('tickets.escalation_team_id')
                ->when($marketingCampaign, fn($query) => $query->where('tickets.marketing_campaign_id', $marketingCampaign))
                ->when($productId, fn($query) => $query->where('tickets.product_id', $productId))
+               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->first();
+     }
+
+     public function findAllTicketOutboundSalesCall($user, $dates, $type)
+     {
+          // Todo : filter by spv, spv esca, am, am esca user
+          $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          $escalationType = $user->escalation_type || $userRole;
+
+          $subJoinTicketHistory = DB::table('ticket_histories')
+               ->join('users', 'ticket_histories.agent_id', 'users.id')
+               ->selectRaw("ticket_histories.ticket_id,count(ticket_histories.id) as call_attempt")
+               ->whereNotIn('users.role', ['agent_escalation'])
+               ->groupBy("ticket_histories.ticket_id");
+
+          return $this->model::query()
+               ->leftJoin("view_status_table_mapper as st", function ($join) {
+                    $join->on("st.id", "tickets.status_id");
+                    $join->on("st.table_name", "tickets.status_table");
+               })
+               ->leftJoinSub($subJoinTicketHistory, "h", "h.ticket_id", "tickets.id")
+               ->select([
+                    DB::raw("count(distinct tickets.id) as data_size"),
+                    DB::raw("sum(h.call_attempt) as call_attempt"),
+                    DB::raw("sum(case when st.status_category='Closed' or tickets.status='Closed' or tickets.status='Auto Closed' then 1 else 0 end) as close_deal"),
+                    DB::raw("sum(case when  tickets.status!='New' then 1 else 0 end) as utilized"),
+               ])
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               // ->whereNull('tickets.escalation_team_id')
                ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
                ->first();
      }

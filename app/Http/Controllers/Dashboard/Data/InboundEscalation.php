@@ -6,14 +6,18 @@ use App\Helpers\Yellow;
 use App\Service\Ticket\DashboardTicketService;
 use App\Service\Utility\UtilityService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
-trait OutboundKpiData
+trait InboundEscalation
 {
-     public function kpiTicketStatus(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketStatusEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
-          $user = user();
-          $currentDate = now();
-          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+         $user = user();
+            // $currentDate = now();
+            $currentDate = Carbon::now();
+            // $currentDate = date('Y-m-d');
+            // dd($currentDate);
+         $dates = Yellow::getDateRangeByPeriodTeamPerformance($currentDate, $request->get('periode', 'today'));
           $tickets = $dashboardTicketService->countAllTicketByCategoryStatus($user, $dates, 'inbound');
           return collect([
                [
@@ -29,8 +33,8 @@ trait OutboundKpiData
                     "color" => "#26BFF0"
                ],
                [
-                    "name" => "Closed",
-                    "color" => "#00CA95"
+                    "name" => "Escalated",
+                    "color" => "#FFBD44"
                ]
           ])->map(function ($category) use ($tickets) {
                $ticket = $tickets->where('status_category', $category['name'])->first();
@@ -41,67 +45,30 @@ trait OutboundKpiData
           });
      }
 
-     public function kpiSlaTimeSalescall(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
+     public function kpiSlaTimeEscalation(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
           $totalDay = count($dates);
-        //   $dates = array(date('2024-09-26'));
+
           $totalResponseSlaTime = 0;//$utilityService->findAllSumResponseTimeSla($user->company_id, 'inbound');
           $totalResolutionSlaTime = 0;//$utilityService->findAllSumResolutionTimeSla($user->company_id, 'inbound');
           $responseTime = $dashboardTicketService->findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, 'inbound')->sum('frt');
-
           $resolutionTime = $dashboardTicketService->findAllFirstResolutionTime($user, $dates,$totalResolutionSlaTime, 'inbound')->sum('frt');
-          $totalOutgoingCalls = $dashboardTicketService->findOutgoingCallsSalescall($user, $dates,'outbound');
-          $totalFrequencyperlead = $dashboardTicketService->findFrequencyperleadSalescall($user, $dates,'outbound');
-
-          $data = $dashboardTicketService->findAllTicketOutboundSalesCall($user, $dates,'outbound');
-          $totalattemp = $dashboardTicketService->findAllTicketByStatusCategorysalescall($user, $dates, 'outbound');
-            // dd($totalFrequencyperlead->total);
-            // dd($totalOutgoingCalls->total);
-          $call_attempt = $data?->call_attempt ?: 0;
-            if ($totalFrequencyperlead->total != '' && $totalOutgoingCalls->total !='' || $totalFrequencyperlead->total != 0 && $totalOutgoingCalls->total !=0) {
-                if ( $totalOutgoingCalls->total!=0 && $totalFrequencyperlead->total!=0 ) {
-                 $cekdata = Yellow::secondsToHoursMinutes(round($totalFrequencyperlead->total / $totalOutgoingCalls->total));
-                 }else {
-                    $cekdata=0;
-                }
-                $totalFrequencyperlead->total;
-                if ($totalattemp->total !=0 && $totalOutgoingCalls->total) {
-                    $freq = round($totalattemp->total/$totalOutgoingCalls->total, 2);
-                }else {
-                    $freq=0;
-                }
-
-            }elseif ($totalattemp->total != '' && $totalOutgoingCalls->total != '' || $totalattemp->total != 0 && $totalOutgoingCalls->total != 0) {
-                $cekdata = Yellow::secondsToHoursMinutes(round($totalFrequencyperlead->total / $totalOutgoingCalls->total));
-                $totalFrequencyperlead->total;
-                $freq = round($totalattemp->total/$totalOutgoingCalls->total, 2);
-            }else {
-                $cekdata=0;
-                $totalFrequencyperlead->total=0;
-                $freq =0;
-            }
-
-        //   dd($totalFrequencyperlead->total);
           return [
                [
-                    "name" => "Outgoing calls",
-                    "total" => $totalOutgoingCalls->total
+                    "name" => "average first response time",
+                    "total" => Yellow::minuteToSla(round($responseTime / $totalDay))
                ],
                [
-                    "name" => "Avg outgoing call time",
-                    "total" => $cekdata
-               ],
-               [
-                    "name" => "Frequency per lead",
-                    "total" => $freq
+                    "name" => "average first resolution time",
+                    "total" => Yellow::minuteToSla(round($resolutionTime / $totalDay))
                ]
           ];
      }
 
-     public function kpiTicketActivity(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketActivityEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
@@ -109,7 +76,7 @@ trait OutboundKpiData
           return $dashboardTicketService->findAllDailyTicketCategory($user, $dates, 'inbound');
      }
 
-     public function kpiSlaChart(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
+     public function kpiSlaChartEscalation(Request $request, UtilityService $utilityService, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
@@ -136,71 +103,71 @@ trait OutboundKpiData
           });
      }
 
-     public function kpiTicketChannel(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketChannelEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $channels = [
-               [
-                    "label" => "Voice PSTN",
-                    "color" => "#F94144",
-                    "source" => ['From SIP', 'From Incoming SIP']
-               ],
+            //    [
+            //         "label" => "Voice PSTN",
+            //         "color" => "#F94144",
+            //         "source" => ['From SIP', 'From Incoming SIP']
+            //    ],
                [
                     "label" => "Web Call",
                     "color" => "#2D9CDB",
                     "source" => ['From Web']
                ],
-               [
-                    "label" => "Web Chat",
-                    "color" => "#F8961E",
-                    "source" => ['From Web']
-               ],
-               [
-                    "label" => "Web Bot",
-                    "color" => "#F9C74F",
-                    "source" => ['From Web Bot']
-               ],
-               [
-                    "label" => "Whatsapp",
-                    "color" => "#90BE6D",
-                    "source" => ['From Whatsapp']
-               ],
-               [
-                    "label" => "Whatsapp Bot",
-                    "color" => "#F3722C",
-                    "source" => ['From Whatsapp Bot']
-               ],
-               [
-                    "label" => "Email",
-                    "color" => "#7A7E80",
-                    "source" => ['From Email']
-               ],
-               [
-                    "label" => "Instagram",
-                    "color" => "#E99C00",
-                    "source" => ['From Instagram']
-               ],
-               [
-                    "label" => "Facebook",
-                    "color" => "#E4BEBE",
-                    "source" => ['From Facebook']
-               ],
-               [
-                    "label" => "Kontakami",
-                    "color" => "#3942B7",
-                    "source" => ['From Kontakami']
-               ],
-               [
-                    "label" => "Walk-In",
-                    "color" => "#C6BD48",
-                    "source" => ['From Walk-In']
-               ]
+            //    [
+            //         "label" => "Web Chat",
+            //         "color" => "#F8961E",
+            //         "source" => ['From Web']
+            //    ],
+            //    [
+            //         "label" => "Web Bot",
+            //         "color" => "#F9C74F",
+            //         "source" => ['From Web Bot']
+            //    ],
+            //    [
+            //         "label" => "Whatsapp",
+            //         "color" => "#90BE6D",
+            //         "source" => ['From Whatsapp']
+            //    ],
+            //    [
+            //         "label" => "Whatsapp Bot",
+            //         "color" => "#F3722C",
+            //         "source" => ['From Whatsapp Bot']
+            //    ],
+            //    [
+            //         "label" => "Email",
+            //         "color" => "#7A7E80",
+            //         "source" => ['From Email']
+            //    ],
+            //    [
+            //         "label" => "Instagram",
+            //         "color" => "#E99C00",
+            //         "source" => ['From Instagram']
+            //    ],
+            //    [
+            //         "label" => "Facebook",
+            //         "color" => "#E4BEBE",
+            //         "source" => ['From Facebook']
+            //    ],
+            //    [
+            //         "label" => "Kontakami",
+            //         "color" => "#3942B7",
+            //         "source" => ['From Kontakami']
+            //    ],
+            //    [
+            //         "label" => "Walk-In",
+            //         "color" => "#C6BD48",
+            //         "source" => ['From Walk-In']
+            //    ]
           ];
 
 
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-
+        //   $dates = array(date('2024-09-11'));
           $tickets = $dashboardTicketService->findAllTicketCategoryBySource($user, $dates, 'inbound');
           return collect($channels)->map(function ($channel) use ($tickets) {
                $ticket = $tickets->whereIn('source', $channel['source'])
@@ -213,7 +180,7 @@ trait OutboundKpiData
           });
      }
 
-     public function kpiVoicePstn(Request $request, YeastarApi $yeastarApi)
+     public function kpiVoicePstnEscalation(Request $request, YeastarApi $yeastarApi)
      {
 
           $user = user();
@@ -227,23 +194,24 @@ trait OutboundKpiData
           return $yeastarApi->getAbaddonMissedCall($companyId,$startDate,$endDate);
      }
 
-     public function kpiWebCall(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiWebCallEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+        //   $dates = array(date('2024-09-26'));
           $missedCall = $dashboardTicketService->findAllMissedCall($user, $dates);
           return [$missedCall];
      }
 
-     public function kpiCsat(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiCsatEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $user = user();
           $currentDate = now();
           $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
           return $dashboardTicketService->findAllCsatRating($user, $dates);
      }
-     public function kpiTicketStatusChart(Request $request, DashboardTicketService $dashboardTicketService)
+     public function kpiTicketStatusChartEscalation(Request $request, DashboardTicketService $dashboardTicketService)
      {
           $colors  = [
                "New" => "#FF605C",
@@ -253,13 +221,25 @@ trait OutboundKpiData
           ];
           $user = user();
           $currentDate = now();
-          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
-          return $dashboardTicketService->findAllTicketByStatusCategory($user, $dates, 'inbound')->map(function($row) use($colors){
+            // dd($currentDate);
+          $dates = Yellow::getDateRangeByPeriodTeamPerformance($currentDate, $request->get('periode', 'today'));
+        //   $dates = array(date('2024-09-11'));
+        //   $dates= $dt->toDateTimeString();
+            // dd($dates);
+          return $dashboardTicketService->findAllTicketByStatusCategoryTeamPerformance($user, $dates, 'inbound')->map(function($row) use($colors){
                $color = @$colors[$row->status_category] ?: '#FF605C';
                return [
                     ...$row->toArray(),
                     'color' => $color,
                ];
           });
+     }
+     public function topClosedCampaignAgentEscalation(Request $request, DashboardTicketService $dashboardTicketService)
+     {
+          $user = user();
+          $currentDate = now();
+          $dates = Yellow::getDateRangeByPeriod($currentDate, $request->get('periode', 'today'));
+        //   $dates = array(date('2024-09-23'));
+          return $dashboardTicketService->findTopSolvedClosedTicketAgentEscalation($user, $dates, "outbound", 5);
      }
 }

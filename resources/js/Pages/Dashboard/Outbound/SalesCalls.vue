@@ -1,5 +1,9 @@
 <template>
     <section>
+        <div class="flex justify-between mb-3">
+            <div></div>
+            <DropdownPeriode :period="period" @update="updatePeriode" />
+        </div>
         <div class="grid md:grid-cols-5 grid-cols-1 md:gap-3 mt-3">
             <div class="md:col-span-6 w-full md:mt-0 mt-3">
 
@@ -17,26 +21,38 @@
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Outgoing calls by agent (top10)
                 </h1>
-                <InboundTicketSolvedByAgent />
+                <OutboundTicketSolvedByAgentNotNew :period="period"/>
             </div>
             <div class="col-span-4">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Outgoing deals by agent (top10)
                 </h1>
-                <InboundTicketSolvedByAgent />
+                <OutboundTicketSolvedByAgentClosed :period="period"/>
             </div>
             <div class="col-span-4">
                 <h1 class="font-krub-bold text-[13px] mb-1">
                     Average outgoing calls by agent (top10)
                 </h1>
-                <InboundTicketSolvedByAgent />
+                <OutboundTicketSolvedByAgentAverage :period="period"/>
             </div>
 
         </div>
     </section>
 </template>
 <script setup lang="ts">
-// import CardLiveDaily2 from "@/Components/Card/Outbound/CardLiveDaily.vue";
-import InboundTicketSolvedByAgent from "@/Components/Chart/Outbound/InboundTicketSolvedByAgent.vue";
+import DropdownPeriode from "@/Components/Dropdown/DropdownPeriode.vue";
+import OutboundTicketSolvedByAgentNotNew from "@/Components/Chart/Outbound/OutboundTicketSolvedByAgentNotNew.vue";
+import OutboundTicketSolvedByAgentClosed from "@/Components/Chart/Outbound/OutboundTicketSolvedByAgentClosed.vue";
+import OutboundTicketSolvedByAgentAverage from "@/Components/Chart/Outbound/OutboundTicketSolvedByAgentAverage.vue";
 import CardKpiSlaTime from "@/Components/Card/Outbound/CardKpiSlaTime.vue";
+import { ref,onBeforeMount } from "vue";
+import {
+    getQueryParam,
+    routeAppendParam,
+} from "@/Plugins/Function/global-function";
+const period = ref(getQueryParam("period", "today"));
+const updatePeriode = (value: string) => {
+    routeAppendParam({ period: value });
+    period.value = value;
+};
 </script>
