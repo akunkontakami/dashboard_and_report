@@ -16,7 +16,8 @@ class Billing extends Model
 
     protected $casts = [
         'summary' => 'array',
-        'additional' => 'array'
+        'additional' => 'array',
+        'online_account' => 'array'
     ];
 
     public function scopeAvailable($query, $date)

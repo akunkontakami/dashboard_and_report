@@ -11,16 +11,15 @@ class BillingService
 
      public function findReportItemBilling($billing)
      {
-          if(!$billing){
-               return ["Ticket List"];
+          $items = ['ticket_list'];
+          $additionalReportItems = ['call_tracking','agent_activity','call_agent'];
+          $onlineAccounts = $billing->online_account;
+          foreach($additionalReportItems as $additional){
+               if(@$onlineAccounts[$additional]){
+                    $items[] = $additional;
+               }
           }
-          $mainPackage = @$billing->summary['additional']['reports']['items'] ?: [];
-          $additional = collect($billing?->additional ?: []);
-          return collect(array_unique([
-               "Ticket List",
-               ...$mainPackage,
-               ...$additional->map(fn($row) => @$row['items']['additional']['reports']['items'])->flatMap(fn($report) => $report)
-          ]))->values();
+          return $items;
      }
 
      public function findActiveCompanyBilling($companyId)
@@ -44,7 +43,8 @@ class BillingService
                     'summary',
                     'additional',
                     'available_from',
-                    'available_until'
+                    'available_until',
+                    'online_account'
                ])
                ->first();
      }

@@ -32,9 +32,14 @@ trait ReportController
      public function index(Request $request, BillingService $billingService, $category)
      {
           $billing = $request->RequestBilling;
+          $reportItems = $billingService->findReportItemBilling($billing);
+          $categoryKey = str_replace('-','_',$category);
+          if(!in_array($categoryKey,$reportItems)){
+               abort(401);
+          }
           return Inertia::render("Report/Index", [
                'billing' => [
-                    'report_items' => $billingService->findReportItemBilling($billing),
+                    'report_items' => $reportItems,
                     'can_view' => $billing ? $billing->expired_at >= date('Y-m-d H:i:s') : false,
                ],
                'category' => $category,

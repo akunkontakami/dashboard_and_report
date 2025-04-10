@@ -7,7 +7,7 @@
                     'bg-yellow border-yellow text-white': category === menu.id,
                 }"
                 :href="route(`report.${type}.index`, menu.id)"
-                v-if="menu.show && items.includes(menu.name)"
+                v-if="menu.show && items.includes(menu.key)"
             >
                 {{ menu.name }}
             </Link>
@@ -21,21 +21,25 @@ const props = defineProps(["category", "type", "can_view", "items"]);
 
 const menus = ref([
     {
+        key : "ticket_list",
         name: "Ticket List",
         id: "ticket-list",
         show: true,
     },
     {
+        key : "call_tracking",
         name: "Call Tracking",
         id: "call-tracking",
         show: props.can_view,
     },
     {
+        key : "agent_activity",
         name: "Agent Activity",
         id: "agent-activity",
         show: props.can_view,
     },
     {
+        key : "call_agent",
         name: "Call Agent",
         id: "call-agent",
         show: props.can_view,
