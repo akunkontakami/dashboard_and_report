@@ -3,7 +3,7 @@
 # /public/build
 /public/hot
 /app/Http/Controllers/Auth
-/public/build/assets
+# /public/build/assets
 /public/storage
 /storage/*.key
 /vendor
