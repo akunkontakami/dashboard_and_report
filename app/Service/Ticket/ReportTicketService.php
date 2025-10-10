@@ -130,7 +130,7 @@ class ReportTicketService
                     DB::raw("ifnull(c.email,u.email) as customer_email")
                ])
                ->groupBy([
-                    'tickets.ticket_number',
+                    'tickets.id',
                ])
                ->orderByRaw('tickets.ticket_date desc,tickets.outbound_data_upload_bucket_id asc,tickets.id asc');
           return $paginate ? $query->paginate($paginate) : $query->get();
