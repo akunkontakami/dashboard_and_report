@@ -13,7 +13,7 @@ class BillingService
      {
           $items = ['ticket_list'];
           $additionalReportItems = ['call_tracking','agent_activity','call_agent'];
-          $onlineAccounts = $billing->online_account;
+          $onlineAccounts = $billing ? $billing->online_account : [];
           foreach($additionalReportItems as $additional){
                if(@$onlineAccounts[$additional]){
                     $items[] = $additional;
