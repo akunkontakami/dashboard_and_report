@@ -15,7 +15,7 @@ class MarketingCampaignService
      {
           // Todo : filter by their own campaign
           $companyId = $user->company_id;
-          $userId = $user->id;
+	  $userId = $user->id;
           $userRole = $user->role;
           $escalationType = $user->escalation_type || $userRole;
           return $this->model::query()
@@ -52,3 +52,4 @@ class MarketingCampaignService
      }
 
 }
+

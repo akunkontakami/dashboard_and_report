@@ -78,7 +78,7 @@ class ReportTicketService
                ->filterBroadcasted($broadcast_response)
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
-               ->where('tickets.is_bucket', 0)
+               // ->where('tickets.is_bucket', 0)
                ->when($created_start && $created_end, fn($query) => $query->whereBetween('tickets.created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"]))
                ->when($modify_start && $modify_end, fn($query) => $query->whereBetween('tickets.ticket_date', [$modify_start . " 00:00:00", $modify_end . " 23:59:59"]))
                ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
@@ -133,6 +133,9 @@ class ReportTicketService
                     'tickets.id',
                ])
                ->orderByRaw('tickets.ticket_date desc,tickets.outbound_data_upload_bucket_id asc,tickets.id asc');
+
+          // dump final SQL & bindings for debugging
+          // dump($query->toSql(), $query->getBindings());
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
 
@@ -208,7 +211,7 @@ class ReportTicketService
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
 
-     public function findAllAgentActivityReportData($user, $filter, $search, $type, $paginate)
+     public function findAllAgentActivityReportData17102025($user, $filter, $search, $type, $paginate)
      {
           $companyId = $user->company_id;
           $userId = $user->id;
@@ -240,6 +243,142 @@ class ReportTicketService
 
           return $paginate ? $query->paginate($paginate) : $query->get();
      }
+
+     public function findAllAgentActivityReportData($user, $filter, $search, $type, $paginate)
+{
+    $companyId = $user->company_id;
+    $created_start = @$filter['created_start'];
+    $created_end = @$filter['created_end'];
+    $agent_id = @$filter['agent_id'];
+    $roles = @$filter['roles'];
+
+    if (!$created_start || !$created_end) {
+        return [];
+    }
+
+    $sql = "
+        WITH ordered_activity AS (
+            SELECT
+                user_id,
+                company_id,
+                CAST(date AS DATE) AS date,
+                category,
+                start,
+                duration,
+                LEAD(category) OVER (PARTITION BY user_id, company_id ORDER BY start) AS next_category,
+                LEAD(start) OVER (PARTITION BY user_id, company_id ORDER BY start) AS next_start
+            FROM company_users_activity_details
+            WHERE company_id = ?
+                AND CAST(date AS DATE) BETWEEN ? AND ?
+        )
+        SELECT 
+            a.user_id, 
+            a.company_id, 
+            a.date,
+            cu.code, 
+            cu.name, 
+            cu.role, 
+            ? AS type_category, 
+            SUM(CASE WHEN a.category = 'login' THEN IFNULL(a.duration,0) ELSE 0 END) AS login_time,
+            SUM(CASE WHEN a.category = 'logout' THEN IFNULL(a.duration,0) ELSE 0 END) AS logout_time,
+            SUM(CASE WHEN a.category = 'logout' AND a.next_category = 'login' THEN TIMESTAMPDIFF(SECOND, a.start, a.next_start) ELSE 0 END) AS offline,
+            IFNULL(ci.talktime_inbound,0) AS talktime_inbound,
+            IFNULL(co.talktime_outbound,0) AS talktime_outbound,
+            (SUM(CASE WHEN a.category = 'login' THEN IFNULL(a.duration,0) ELSE 0 END) - IFNULL(ci.talktime_inbound,0)) AS available_time
+        FROM ordered_activity a
+        INNER JOIN company_users cu 
+            ON cu.user_id = a.user_id AND cu.company_id = a.company_id
+        INNER JOIN calls c 
+            ON c.agent_id = a.user_id 
+            AND c.company_id = a.company_id 
+            AND CAST(c.created_at AS DATE) = a.date
+        LEFT JOIN (
+            SELECT 
+                agent_id, 
+                company_id, 
+                CAST(created_at AS DATE) AS date, 
+                SUM(total_duration / 2) AS talktime_inbound
+            FROM calls
+            WHERE (source_category = ? OR source_category IS NULL)
+                AND company_id = ?
+                AND CAST(created_at AS DATE) BETWEEN ? AND ?
+            GROUP BY agent_id, company_id, CAST(created_at AS DATE)
+        ) ci
+            ON ci.agent_id = a.user_id
+            AND ci.company_id = a.company_id
+            AND ci.date = a.date
+        LEFT JOIN (
+            SELECT 
+                agent_id, 
+                company_id, 
+                CAST(created_at AS DATE) AS date, 
+                SUM(total_duration) AS talktime_outbound
+            FROM calls
+            WHERE source_category = 'outbound'
+                AND company_id = ?
+                AND CAST(created_at AS DATE) BETWEEN ? AND ?
+            GROUP BY agent_id, company_id, CAST(created_at AS DATE)
+        ) co
+            ON co.agent_id = a.user_id
+            AND co.company_id = a.company_id
+            AND co.date = a.date
+        WHERE 1=1
+          AND c.source_category = ?
+          AND cu.name LIKE ?
+    ";
+
+    // --- bindings awal ---
+    $bindings = [
+        $companyId, $created_start, $created_end, $type, // untuk CTE dan type_category
+        $type, $companyId, $created_start, $created_end, // untuk ci subquery
+        $companyId, $created_start, $created_end,        // untuk co subquery
+        $type, '%' . $search . '%',                                            // untuk c.source_category
+    ];
+
+    // --- Filter agent_id ---
+    if ($agent_id) {
+        $placeholders = implode(',', array_fill(0, count($agent_id), '?'));
+        $sql .= " AND a.user_id IN ($placeholders)";
+        $bindings = array_merge($bindings, $agent_id);
+    }
+
+    // --- Filter roles ---
+    if ($roles) {
+        $placeholders = implode(',', array_fill(0, count($roles), '?'));
+        $sql .= " AND cu.role IN ($placeholders)";
+        $bindings = array_merge($bindings, $roles);
+    }
+    $sql .= "
+        GROUP BY cu.name, cu.code, cu.role, a.company_id
+        ORDER BY cu.name ASC
+    ";
+
+     // dump final SQL & bindings for debugging
+     //   dump($sql, $bindings);
+
+    // --- Eksekusi query ---
+    $query = DB::select($sql, $bindings);
+    $data = collect($query);
+
+    // --- Pagination (opsional) ---
+    if ($paginate) {
+        $page = request()->get('page', 1);
+        $perPage = $paginate;
+        $offset = ($page - 1) * $perPage;
+        $items = $data->slice($offset, $perPage)->values();
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $data->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    }
+
+    return $data;
+}
+
 
 
      public function findAllCallAgentReportData($user, $filter, $search, $type, $paginate)
