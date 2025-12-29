@@ -19,6 +19,8 @@ use App\Service\Utility\MarketingCampaignService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 trait ReportController
 {
@@ -110,6 +112,7 @@ trait ReportController
           $company = $user->company;
           $type = $request->type ?: 'excel';
           $filter = $request->get('filter', []);
+          
           $data = $reportTicketService->findAllFormTicketListReportData(
                user: $user,
                type: $this->type,
@@ -122,12 +125,149 @@ trait ReportController
           } else {
                $filename = "Report Ticket Form";
                $filename = $filename . " " . $company->name . " " . @$filter['created_start'] . " - " . @$filter['created_end'];
+                    if ($data->isEmpty()) {
+                         return Excel::download(new ExportExcel([
+                              'view' => "exports.reports.ticket-form",
+                              'data' => [
+                                   'items' => $data,
+                                   'type' => $type
+                              ],
+                              'verifications' => []
+                         ]), "{$filename}.xlsx", \Maatwebsite\Excel\Excel::XLSX, [
+                              'filename' => "{$filename}.xlsx",
+                         ]);
+                    }else {
+                         if($this->type == 'inbound'){
+                         
+                         $filename = "Report Ticket Form";
+                         $filename = $filename . " " . $company->name . " " . @$filter['created_start'] . " - " . @$filter['created_end'];
+                    
+                         return Excel::download(new ExportExcel([
+                              'view' => "exports.reports.ticket-form",
+                              'data' => [
+                                   'items' => $data,
+                                   'type' => $this->type
+                              ],
+                         ]), "{$filename}.xlsx", \Maatwebsite\Excel\Excel::XLSX, [
+                              'filename' => "{$filename}.xlsx",
+                         ]);
+                    }else {
+                          foreach ($data as $row) 
+                         {
+                              //  \DB::enableQueryLog();
+                                   $groups = DB::table('outbound_verification_form_fields as fvf')
+                                   ->select([
+                                        'fvf.group_name',
+                                        'f.id',
+                                        'f.name as verification_name',
+                                   ])
+                                   ->join('outbound_verification_forms as f', 'f.id', '=', 'fvf.outbound_verification_form_id')
+                                   ->where('f.company_id', $company->id)
+                                   ->whereBetween('f.created_at', [
+                                        @$filter['created_start'] . " 00:00:00",
+                                        @$filter['created_end'] . " 23:59:59"
+                                   ])
+                                   ->groupBy('fvf.group_name', 'f.id', 'f.name')
+                                   ->orderBy('fvf.group_sorting', 'asc')
+                                   ->get();
+                              //   dd(\DB::getQueryLog());  die;
+                                   $result = [];
+
+                                   foreach ($groups as $rowVer) {
+                                   
+                                   // ambil semua fields di group ini (TIDAK dibatasi hanya 1 id)
+                                   $fields = DB::table('outbound_verification_form_fields as fvf')
+                                        ->select('fvf.*')
+                                        ->where('fvf.outbound_verification_form_id', $rowVer->id)
+                                        ->where('fvf.group_name', $rowVer->group_name)
+                                        ->orderBy('fvf.sorting', 'asc')
+                                        ->get();
+                                   
+                                   // data JSON user (sumber nilai)
+                                   $inputData = json_decode($row->data, true) ?? [];
+
+                                   // helper: cari value di inputData berdasarkan slug dengan fallback
+                                   $findValue = function(array $input, string $slug) {
+                                        // 1) exact match
+                                        if (array_key_exists($slug, $input)) {
+                                             return $input[$slug];
+                                        }
+
+                                        // 2) try common suffixes _1, _2
+                                        if (array_key_exists($slug . '_1', $input)) {
+                                             return $input[$slug . '_1'];
+                                        }
+                                        if (array_key_exists($slug . '_2', $input)) {
+                                             return $input[$slug . '_2'];
+                                        }
+
+                                        // 3) try stripped numbers from input keys (e.g. country_code_1 vs country_code)
+                                        foreach ($input as $k => $v) {
+                                             // jika slug sama-sama bagian dari key (case-insensitive)
+                                             if (stripos($k, $slug) !== false) {
+                                                  return $v;
+                                             }
+                                        }
+
+                                        // 4) fallback: try kebab/snake/camel variations
+                                        $variants = [
+                                             Str::snake($slug),
+                                             Str::camel($slug),
+                                             Str::kebab($slug),
+                                             str_replace(['-',' '], ['_','_'], $slug),
+                                        ];
+                                        foreach ($variants as $var) {
+                                             if (array_key_exists($var, $input)) {
+                                                  return $input[$var];
+                                             }
+                                        }
+
+                                        return null;
+                                   };
+
+                                   $mappedFields = [];
+
+                                   foreach ($fields as $field) {
+                                        // dapatkan value dengan fallback
+                                        $value = $findValue($inputData, $field->slug);
+                                        
+                                        // jika null, tampilkan '-' (atau kosong sesuai preferensi)
+                                        $mappedFields[] = [
+                                             'label' => $field->label,
+                                             'slug'  => $field->slug,
+                                             'value' => $value !== null ? $value : '-',
+                                        ];
+                                   }
+
+                                   $result[] = [
+                                        'group_name'        => $rowVer->group_name,
+                                        'verification_name' => $rowVer->verification_name,
+                                        'fields'            => $mappedFields,
+                                   ];
+                                   }
+                         }
+                    }
+                   
+                    }
+                    
+                    // $html = view("exports.reports.ticket-form", [
+                    //      'data' => [
+                    //                'items' => $data,
+                    //                'type' => $type
+                    //           ],
+                    //          'verifications' => $result,
+                    // ])->render();
+
+                    // echo $html;
+                    // exit; // wajib, biar job tidak lanjut ke proses PDF
+              
                return Excel::download(new ExportExcel([
                     'view' => "exports.reports.ticket-form",
                     'data' => [
                          'items' => $data,
-                         'type' => $type
+                         'type' => $this->type
                     ],
+                    'verifications' => $result,
                ]), "{$filename}.xlsx", \Maatwebsite\Excel\Excel::XLSX, [
                     'filename' => "{$filename}.xlsx",
                ]);
@@ -168,7 +308,7 @@ trait ReportController
                ->firstOrFail();
           $file = $queueLog->data['file'];
           $queueLog->delete();
-          return response()->download(storage_path("app/{$file}"))->deleteFileAfterSend(true);;
+          return response()->download(storage_path("app/{$file}"))->deleteFileAfterSend(true);
      }
 
      private function getDataTable(Request $request, $category, $paginate = 10)

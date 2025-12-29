@@ -1,63 +1,76 @@
+{{-- Jika data kosong atau tidak ada kolom penting --}}
+@if(empty($row) || !is_object($row) || !isset($row->created_at))
+    <p style="text-align:center; margin-top:50px;">No data available</p>
+    @php return; @endphp
+@endif
+
 <p class="label">Date</p>
 <div class="input">
-    {{ $row->created_at }}
+    {{ $row->created_at ?? '-' }}
 </div>
+
 <p class="label">ID Number</p>
 <div class="input">
-    {{ $row->number_id ?: '-' }}
+    {{ $row->number_id ?? '-' }}
 </div>
+
 <p class="label">Ticket Number</p>
 <div class="input">
-    {{ $row->ticket_number ?: '-' }}
+    {{ $row->ticket_number ?? '-' }}
 </div>
+
 <p class="label">Customer Name</p>
 <div class="input">
-    {{ $row->customer_name ?: '-' }}
+    {{ $row->customer_name ?? '-' }}
 </div>
+
 {{-- inbound_outbound --}}
 <h2 class="group-name" style="margin-top: 20px">Inbound / Outbound</h2>
-@foreach (@$row->form['all'] ?: [] as $groupName => $forms)
+@foreach (($row->form['all'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
 @endforeach
-@foreach (@$row->form['inbound_outbound'] ?: [] as $groupName => $forms)
+
+@foreach (($row->form['inbound_outbound'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
 @endforeach
+
 {{-- escalation_1 --}}
 <h2 class="group-name" style="margin-top: 20px">Escalation 1</h2>
-@foreach (@$row->form['all'] ?: [] as $groupName => $forms)
+@foreach (($row->form['all'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
 @endforeach
-@foreach (@$row->form['escalation_1'] ?: [] as $groupName => $forms)
+
+@foreach (($row->form['escalation_1'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
@@ -65,28 +78,31 @@
 
 {{-- escalation_2 --}}
 <h2 class="group-name" style="margin-top: 20px">Escalation 2</h2>
-@foreach (@$row->form['all'] ?: [] as $groupName => $forms)
+@foreach (($row->form['all'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
 @endforeach
-@foreach (@$row->form['escalation_2'] ?: [] as $groupName => $forms)
+
+@foreach (($row->form['escalation_2'] ?? []) as $groupName => $forms)
     <div class="card">
         <h2 class="group-name">{{ $groupName }}</h2>
         @foreach ($forms as $form)
-            <p class="label">{{ $form->label }}</p>
+            <p class="label">{{ $form->label ?? '-' }}</p>
             <div class="input">
-                {{ $form->content ?: '-' }}
+                {{ $form->content ?? '-' }}
             </div>
         @endforeach
     </div>
 @endforeach
+
+
 @if ($category == 'outbound')
     <div class="card">
         <h2 class="group-name">Insured</h2>
@@ -116,7 +132,7 @@
         </div>
     </div>
 
-    @foreach($row->beneficiary as $index => $ben)
+        @foreach($row->beneficiary as $index => $ben)
         <div class="card">
             <h2 class="group-name">Beneficiary {{$index+1}}</h2>
             <p class="label"Relation</p>
@@ -143,6 +159,21 @@
             <div class="input">
                 {{ $ben?->dob ?: '-' }}
             </div>
+        </div>
+    @endforeach
+@endif
+
+
+{{-- Verifications --}}
+@if(!empty($verifications))
+    <h2 class="group-name" style="margin-top: 20px">{{ $verifications[0]['verification_name'] ?? '' }}</h2>
+    @foreach($verifications as $ver)
+        <div class="card">
+            <h2 class="group-name">{{ $ver['group_name'] ?? '-' }}</h2>
+            @foreach(($ver['fields'] ?? []) as $f)
+                <p class="label">{{ $f['label'] ?? '-' }}</p>
+                <div class="input">{{ $f['value'] ?? '-' }}</div>
+            @endforeach
         </div>
     @endforeach
 @endif

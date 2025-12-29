@@ -6,6 +6,7 @@ use App\Models\Ticket\Ticket;
 use App\Models\Util\Call;
 use App\Models\Util\Rating;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class DashboardTicketServiceOutbond
 {
@@ -261,164 +262,269 @@ class DashboardTicketServiceOutbond
 
      public function findTopSolvedClosedTicketAgentClosedSalescall($user, $dates, $type, $top = 10)
      {
-          // Todo : filter by spv, spv esca, am, am esca user
+          
+
+          //  Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          // dd($userRole->name);
 
-          $result = $this->model::query()
-                ->Join("calls", function ($join) {
-                    $join->on("calls.id", "tickets.call_id");
-                })
-                ->Join("company_users", function ($join) {
-                    $join->on("company_users.user_id", "calls.agent_id");
-                })
-               ->leftJoin("view_status_table_mapper as st", function ($join) {
-                    $join->on("st.id", "tickets.status_id");
-                    $join->on("st.table_name", "tickets.status_table");
+          
+          $startDate = $dates[0];
+          $endDate   = $dates[count($dates) - 1];
+          $url = config('services.API_PBX_URL_V2');
+          $response = Http::get("{$url}/recording/index", [
+               'direction' => $type == 'inbound' ? 1 : 2,
+               'start_time' => $startDate,
+               'end_time' => $endDate,
+               'anumber' => '',
+          ])->json();
+           $data = @$response ?: [];
+          $sessionKeys = collect(@$data['data'] ?: [])->pluck('session_key');
+          $agentExt = collect(@$data['data'] ?: [])->pluck('agent_ext');
+          // \DB::enableQueryLog();
+           return  $this->model::query() // kalau model-nya masih Ticket, ganti jadi DB::table('calls')
+               ->from('calls')
+               ->leftJoin('tickets', 'calls.id', '=', 'tickets.call_id')
+               ->leftJoin('outbound_status_master as er', 'er.company_id', '=', 'tickets.company_id')
+               ->leftJoin('company_users as rs', function ($join) {
+                    $join->on('rs.user_id', '=', 'calls.agent_id');
+                    $join->on('rs.company_id', '=', 'calls.company_id');
                })
-
-               ->select([
-                    'calls.agent_id as current_agent_id',
-                    'company_users.name',
-                    'company_users.profile',
-                    DB::raw("COUNT(tickets.status) AS total"),
-                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
-               ])
-               ->where('tickets.company_id', $companyId)
+              
+               ->selectRaw("
+                    tickets.ticket_number,
+                    calls.id as callsid,
+                    calls.sip,
+                    rs.name,
+                    er.status_category, 
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.destination')) AS destination,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.reg_name')) AS extension_number
+                  ")
+               // ->where('tickets.company_id', $companyId)
+               ->when($userRole->name === 'spv', function ($q) use ($userId) {
+                    return $q->where('tickets.spv_id', $userId);
+               })
+               ->where(function ($query) use ($sessionKeys, $agentExt) {
+                $query->whereIn('calls.sip', $sessionKeys->toArray());
+                if (count($agentExt)) {
+                    $query->orWhereIn(DB::raw('JSON_UNQUOTE(sip_extension->\'$.extension_number\')'), $agentExt);
+                }
+            })
                ->where('tickets.type', $type)
-               ->where(function ($query) {
-                $query->whereIn('tickets.status', ["NEW"]);
-
-           })
-               // ->whereNull('tickets.marketing_campaign_id')
-               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-
-               ->groupBy(["calls.agent_id", "company_users.name", "company_users.profile"])
-               ->orderBy("total", "desc")
-               ->take($top)
+               ->whereIn('er.status_category', ['Closed'])
+               // ->whereRaw("date(tickets.ticket_date) BETWEEN '2025-11-11' AND '2025-11-11'")
+               // ->groupBy('tickets.ticket_number')
+               // ->orderByDesc('total')
                ->get();
-          $items = $result->toArray();
-          $totalData = $result->count();
-          if ($totalData < $top && $totalData && $type == 'outbound') {
-               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
-                    'current_agent_id' => null,
-                    'name' => "#",
-                    'total' => 0
-               ]);
-               $items = [
-                    ...$items,
-                    ...$appends
-               ];
-          }
-          return $items;
+          //    dd(\DB::getQueryLog());
      }
 
+     
      public function findTopSolvedClosedTicketAgentAverageSalescall($user, $dates, $type, $top = 10)
      {
           // Todo : filter by spv, spv esca, am, am esca user
+          // $companyId = $user->company_id;
+          // \DB::enableQueryLog();
+
+          // $result = DB::table('tickets')
+          //      ->join('outbound_status_master as er', function ($join) {
+          //           $join->on('er.company_id', '=', 'tickets.company_id');
+          //      })
+          //      ->join('company_users as rs', function ($join) {
+          //           $join->on('rs.user_id', '=', 'tickets.current_agent_id');
+          //      })
+          //      ->select([
+          //           DB::raw('COUNT( DISTINCT `tickets`.`ticket_number`) as total_data'),
+          //           DB::raw('COUNT(tickets.status) / COUNT( DISTINCT `tickets`.`ticket_number`) as total'),
+          //           'tickets.ticket_number',
+          //           'rs.name',
+          //           'rs.profile',
+          //           DB::raw('SUM(CASE WHEN er.status_category NOT IN ("New", "Open") THEN 1 ELSE 0 END) AS open')
+          //      ])
+          //      ->where('tickets.company_id', $companyId)
+          //      ->where('tickets.type', $type) // outbound
+          //      ->whereNotIn('er.status_category', ['New', 'Open'])
+          //      ->whereBetween(DB::raw('date(tickets.ticket_date)'), [$dates[0], $dates[count($dates) - 1]])
+          //      // ->whereRaw("date(tickets.ticket_date) between '2025-11-11' and '2025-11-11'")
+          //      ->groupBy('rs.name', 'rs.profile')
+          //      ->orderBy('total', 'desc')
+          //      ->take($top)
+          //      ->get();
+          //       dd(\DB::getQueryLog());
+          //      $items = $result->toArray();
+          //      $totalData = $result->count();
+          //      //  dd($items);die;
+               
+          //      // 🧩 Tambah filler jika kurang dari $top
+          //      if ($totalData < $top && $totalData && $type == 'outbound') {
+          //      $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
+          //           'ticket_number' => null,
+          //           'name' => "#",
+          //           'profile' => null,
+          //           'total' => 0
+          //      ]);
+
+          //      $items = [
+          //           ...$items,
+          //           ...$appends
+          //      ];
+          //           }
+
+          
+          // return $items;
+          
+          //  Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          // dd($userRole->name);
+          // \DB::enableQueryLog();
+          $startDate = $dates[0];
+          $endDate   = $dates[count($dates) - 1];
+          $url = config('services.API_PBX_URL_V2');
+          $response = Http::get("{$url}/recording/index", [
+               'direction' => $type == 'inbound' ? 1 : 2,
+               'start_time' => $startDate,
+               'end_time' => $endDate,
+               'anumber' => '',
+          ])->json();
+           $data = @$response ?: [];
+          $sessionKeys = collect(@$data['data'] ?: [])->pluck('session_key');
+          $agentExt = collect(@$data['data'] ?: [])->pluck('agent_ext');
 
-          $result = $this->model::query()
-                ->Join("calls", function ($join) {
-                    $join->on("calls.id", "tickets.call_id");
-                })
-                ->Join("company_users", function ($join) {
-                    $join->on("company_users.user_id", "calls.agent_id");
-                })
-               ->leftJoin("view_status_table_mapper as st", function ($join) {
-                    $join->on("st.id", "tickets.status_id");
-                    $join->on("st.table_name", "tickets.status_table");
+          return   $this->model::query() // kalau model-nya masih Ticket, ganti jadi DB::table('calls')
+               ->from('calls')
+               ->leftJoin('tickets', 'calls.id', '=', 'tickets.call_id')
+               ->leftJoin('company_users as rs', function ($join) {
+                    $join->on('rs.user_id', '=', 'calls.agent_id');
+                    $join->on('rs.company_id', '=', 'calls.company_id');
                })
-
-               ->select([
-                    'calls.agent_id as current_agent_id',
-                    'company_users.name',
-                    'company_users.profile',
-                    DB::raw("COUNT(tickets.status) AS totalOutgoingCalls"),
-                    DB::raw("SUM(calls.total_duration) as totalFrequencyperlead"),
-                    DB::raw("ROUND(ROUND(SUM(calls.total_duration) / COUNT(tickets.status),2) / COUNT(tickets.status), 2) as total"),
-               ])
-               ->where('tickets.company_id', $companyId)
+               ->selectRaw("
+                    tickets.ticket_number,
+                    calls.id as callsid,
+                    calls.sip,
+                    rs.name,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.destination')) AS destination,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.reg_name')) AS extension_number
+                  ")
+               // ->where('tickets.company_id', $companyId)
+               ->when($userRole->name === 'spv', function ($q) use ($userId) {
+                    return $q->where('tickets.spv_id', $userId);
+               })
+               ->where(function ($query) use ($sessionKeys, $agentExt) {
+                $query->whereIn('calls.sip', $sessionKeys->toArray());
+                if (count($agentExt)) {
+                    $query->orWhereIn(DB::raw('JSON_UNQUOTE(sip_extension->\'$.extension_number\')'), $agentExt);
+                }
+            })
                ->where('tickets.type', $type)
-               ->where(function ($query) {
-                $query->whereNotIn('tickets.status', ["NEW"]);
-
-           })
-               // ->whereNull('tickets.marketing_campaign_id')
-               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-
-               ->groupBy(["calls.agent_id", "company_users.name", "company_users.profile"])
-               ->orderBy("total", "desc")
-               ->take($top)
-               ->get();
-          $items = $result->toArray();
-        //    dd($items);
-
-          $totalData = $result->count();
-          if ($totalData < $top && $totalData && $type == 'outbound') {
-               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
-                    'current_agent_id' => null,
-                    'name' => "#",
-                    'total' => 0
-               ]);
-               $items = [
-                    ...$items,
-                    ...$appends
-               ];
-          }
-          return $items;
+                ->get();
+          //    dd(\DB::getQueryLog());
      }
 
      public function findTopSolvedClosedTicketAgentSalescall($user, $dates, $type, $top = 10)
      {
-          // Todo : filter by spv, spv esca, am, am esca user
+         // Todo : filter by spv, spv esca, am, am esca user
           $companyId = $user->company_id;
+          $userId = $user->id;
+          $userRole = $user->role;
+          // \DB::enableQueryLog();
 
-          $result = $this->model::query()
-                ->Join("calls", function ($join) {
-                    $join->on("calls.id", "tickets.call_id");
-                })
-                ->Join("company_users", function ($join) {
-                    $join->on("company_users.user_id", "calls.agent_id");
-                })
-               ->leftJoin("view_status_table_mapper as st", function ($join) {
-                    $join->on("st.id", "tickets.status_id");
-                    $join->on("st.table_name", "tickets.status_table");
+          // return $result = DB::table('tickets')
+          //      ->join('outbound_status_master as er', function ($join) {
+          //           $join->on('er.company_id', '=', 'tickets.company_id');
+          //      })
+          //      ->join('company_users as rs', function ($join) {
+          //           $join->on('rs.user_id', '=', 'tickets.current_agent_id');
+          //      })
+          //      ->select([
+          //           DB::raw('COUNT(tickets.status) as total'),
+          //           'tickets.ticket_number',
+          //           'rs.name',
+          //           'rs.profile',
+          //           DB::raw('SUM(CASE WHEN er.status_category NOT IN ("New", "Open") THEN 1 ELSE 0 END) AS open')
+          //      ])
+          //      ->where('tickets.company_id', $companyId)
+          //      ->where('tickets.type', $type) // outbound
+          //      ->whereNotIn('er.status_category', ['New', 'Open'])
+          //      ->whereBetween(DB::raw('date(tickets.ticket_date)'), [$dates[0], $dates[count($dates) - 1]])
+          //      // ->whereRaw("date(tickets.ticket_date) between '2025-11-11' and '2025-11-11'")
+          //      ->groupBy( 'rs.name', 'rs.profile')
+          //      ->orderBy('total', 'desc')
+          //      ->take($top)
+          //      ->get();
+
+          //      $items = $result->toArray();
+          //      $totalData = $result->count();
+
+          //      // 🧩 Tambah filler jika kurang dari $top
+          //      if ($totalData < $top && $totalData && $type == 'outbound') {
+          //      $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
+          //           'ticket_number' => null,
+          //           'name' => "#",
+          //           'profile' => null,
+          //           'total' => 0
+          //      ]);
+
+          //      $items = [
+          //           ...$items,
+          //           ...$appends
+          //      ];
+          //           }
+          //  dd(\DB::getQueryLog());
+
+          // \DB::enableQueryLog();
+          $startDate = $dates[0];
+          $endDate   = $dates[count($dates) - 1];
+          $url = config('services.API_PBX_URL_V2');
+          $response = Http::get("{$url}/recording/index", [
+               'direction' => $type == 'inbound' ? 1 : 2,
+               'start_time' => $startDate,
+               'end_time' => $endDate,
+               'anumber' => '',
+          ])->json();
+           $data = @$response ?: [];
+          $sessionKeys = collect(@$data['data'] ?: [])->pluck('session_key');
+          $agentExt = collect(@$data['data'] ?: [])->pluck('agent_ext');
+
+          return   $this->model::query() // kalau model-nya masih Ticket, ganti jadi DB::table('calls')
+               ->from('calls')
+               ->leftJoin('tickets', 'calls.id', '=', 'tickets.call_id')
+               // ->join('outbound_status_master as er', function ($join) {
+               //      $join->on('er.company_id', '=', 'tickets.company_id');
+               // })
+               ->leftJoin('company_users as rs', function ($join) {
+                    $join->on('rs.user_id', '=', 'calls.agent_id');
+                    $join->on('rs.company_id', '=', 'calls.company_id');
                })
-
-               ->select([
-                    'calls.agent_id as current_agent_id',
-                    'company_users.name',
-                    'company_users.profile',
-                    DB::raw("COUNT(tickets.status) AS total"),
-                    DB::raw("sum(case when st.status_category='Open' then 1 else 0 end) as open"),
-               ])
-               ->where('tickets.company_id', $companyId)
+               ->selectRaw("
+                    tickets.ticket_number,
+                    calls.id as callsid,
+                    calls.sip,
+                    rs.name,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.destination')) AS destination,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.reg_name')) AS extension_number
+                  ")
+               // ->where('tickets.company_id', $companyId)
+               ->when($userRole->name === 'spv', function ($q) use ($userId) {
+                    return $q->where('tickets.spv_id', $userId);
+               })
+               ->where(function ($query) use ($sessionKeys, $agentExt) {
+                $query->whereIn('calls.sip', $sessionKeys->toArray());
+                if (count($agentExt)) {
+                    $query->orWhereIn(DB::raw('JSON_UNQUOTE(sip_extension->\'$.extension_number\')'), $agentExt);
+                }
+            })
                ->where('tickets.type', $type)
-               ->where(function ($query) {
-                $query->whereNotIn('tickets.status', ["NEW"]);
-
-           })
-               // ->whereNull('tickets.marketing_campaign_id')
-               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-
-               ->groupBy(["calls.agent_id", "company_users.name", "company_users.profile"])
-               ->orderBy("total", "desc")
-               ->take($top)
+               // ->whereNotIn('er.status_category', ['New', 'Open'])
+               // ->whereRaw("date(tickets.ticket_date) BETWEEN '2025-11-11' AND '2025-11-11'")
+               // ->groupBy('tickets.ticket_number')
+               // ->orderByDesc('total')
                ->get();
-          $items = $result->toArray();
-          $totalData = $result->count();
-          if ($totalData < $top && $totalData && $type == 'outbound') {
-               $appends = collect(range(1, $top - $totalData))->map(fn($row) => [
-                    'current_agent_id' => null,
-                    'name' => "#",
-                    'total' => 0
-               ]);
-               $items = [
-                    ...$items,
-                    ...$appends
-               ];
-          }
-          return $items;
+          //    dd(\DB::getQueryLog());
+          
      }
 
      public function findAllFirstResponseTime($user, $dates, $totalResponseSlaTime, $type)

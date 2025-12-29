@@ -33,7 +33,7 @@ trait OutboundCampaignData
           $totalTicketStatus = count($ticketByStatus);
           $higher = [
                "label" => "Avg. Call Attempt",
-               "total" => $data_size ? round($call_attempt / $totalTicketStatus,2) : 0
+               "total" => $data_size ? round($data_size / $call_attempt,2) : 0
           ];
           return [
                'items' => [

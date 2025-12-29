@@ -40,7 +40,7 @@
                         class="font-krub-medium text-[12px] py-2 w-[100px] uppercase"
                         id="btn-close-confirmation"
                     >
-                       NO
+                       No
                     </OutlineGrey>
                     <ButtonYellow
                         type="button"
@@ -49,7 +49,7 @@
                         :disabled="progres"
                         class="w-[100px] uppercase border-yellow"
                     >
-                        YES
+                        Yes
                     </ButtonYellow>
                 </div>
             </div>

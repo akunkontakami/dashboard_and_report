@@ -19,7 +19,6 @@ class LoginAction
 {
      public function execute(Request $request)
      {
-
           $request->validate([
                'email' => 'required|email',
                'password' => 'required|min:8|max:50|regex:/^.*(?=.{3,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).*$/',
@@ -32,16 +31,33 @@ class LoginAction
           $user = @$credential['user'] ?: $companyAccount;
 
           if (!$companyUser && !$user) {
-               throw ValidationException::withMessages(['email' => 'The email you entered is incorrect',]);
+               throw ValidationException::withMessages([
+                    'email' => 'The email you entered is incorrect',
+               ]);
           }
 
-          // $this->forceLogoutUser($user->id);
+          // 🔐 Validasi password sesuai dengan data DB
+          if ($user) {
+               if (!Hash::check($request->password, $user->password)) {
+                    throw ValidationException::withMessages([
+                         'password' => 'The password you entered does not match our records.',
+                    ]);
+               }
+          } elseif ($companyAccount) {
+               if (!Hash::check($request->password, $companyAccount->password)) {
+                    throw ValidationException::withMessages([
+                         'password' => 'The password you entered does not match our records.',
+                    ]);
+               }
+          }
 
+          // Session setup
           $companyName = null;
           $companyId = $user->company_id ?: $companyUser->company_id;
-          if($companyUser && !in_array($user->role,[Role::BA,Role::Admin])){
+          if ($companyUser && !in_array($user->role, [Role::BA, Role::Admin])) {
                $companyName = $companyUser?->brand_name;
           }
+
           $sessionObject = [
                'id' => $user->id,
                'role' => $user->role,
@@ -62,22 +78,7 @@ class LoginAction
                'escalation_type' => $companyUser?->escalation_type,
           ];
 
-          // $randomDeviceToken = base64_encode(str()->uuid() . date('YmdHis'));
-          // if($companyAccount){
-          //      unset($companyAccount->name);
-          //      unset($companyAccount->profile);
-          //      $companyAccount->update([
-          //           'device_token' => $randomDeviceToken
-          //      ]);
-          // }else{
-          //      $user->update([
-          //           'platform' => 'web',
-          //           'regid' => $randomDeviceToken
-          //      ]);
-          // }
-
           session()->put(config('services.session-user-prefix'), (object) $sessionObject);
-          // session()->put('user-device-token', $randomDeviceToken);
           return $user;
      }
 

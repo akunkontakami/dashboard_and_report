@@ -20,27 +20,36 @@ class TicketListReportResource extends JsonResource
         $slaResolutionTime = Yellow::getDurationSlaTimer($this->sla_resolution_time, now());
 
         $status = $this->escalation_status ?: $this->status;
-        $statusColor = in_array($status,['New','From Bot','From Whatsapp Bot']) ? 'bg-offline' : match ($this->status_category) {
-            'Closed' => 'bg-online',
-            'Solved' => 'bg-blue',
-            'Open' => 'bg-kuning',
-            'New' => 'bg-offline',
-            default => 'bg-online',
-        };
+        $statusCategory = $this->status_category ?: $status; // fallback ke status jika category null
+
+        $statusColor = in_array($status, ['New', 'From Bot', 'From Whatsapp Bot', 'From Chatbot'])
+            ? 'bg-offline'
+            : match (strtolower($statusCategory)) {
+                'closed' => 'bg-online',
+                'solved' => 'bg-blue',
+                'open' => 'bg-kuning',
+                'new' => 'bg-offline',
+                default => 'bg-online',
+            };
+
+       
 
         return [
             ...parent::toArray($request),
             'date' => date('d M Y', strtotime($this->created_at)),
             'updated_at' => date('d M Y', strtotime($this->updated_at)),
             'helpdesk_name' => $this->product_category == 'Other' ? 'Other' : $this->helpdesk_name,
-            'priority_color' => match ($this->priority) {
-                'Low' => 'bg-online',
-                'Medium' => 'bg-kuning',
-                'High' => 'bg-offline',
-                'Critical' => 'bg-offline',
-                'Urgent' => 'bg-offline',
-                default => 'bg-online',
-            },
+            'priority_color' => $this->priority === '-' 
+                ? null 
+                : match ($this->priority) {
+                    'Low' => 'bg-online',
+                    'Medium' => 'bg-kuning',
+                    'High' => 'bg-offline',
+                    'Critical' => 'bg-offline',
+                    'Urgent' => 'bg-offline',
+                    default => 'bg-online',
+                },
+
             'status_color' => str_contains(strtolower($status), 'closed') ? 'bg-online' : $statusColor,
             'sla_response_time' => $slaResponseTime,
             'sla_resolution_time' => $slaResolutionTime,

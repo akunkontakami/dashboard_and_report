@@ -31,5 +31,9 @@
          id: "product",
          name: "Product",
      },
+     {
+         id: "dashboard-productivity",
+         name: "Dashboard Productivity",
+     },
  ]);
  </script>
