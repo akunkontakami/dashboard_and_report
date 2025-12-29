@@ -6,6 +6,7 @@ use App\Models\Ticket\Ticket;
 use App\Models\Util\Call;
 use App\Models\Util\Rating;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class DashboardTicketService
 {
@@ -689,23 +690,58 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
+          // dd($userRole->name);
 
+          // \DB::enableQueryLog();
+          $startDate = $dates[0];
+          $endDate   = $dates[count($dates) - 1];
+          $url = config('services.API_PBX_URL_V2');
+          $response = Http::get("{$url}/recording/index", [
+               'direction' => $type == 'inbound' ? 1 : 2,
+               'start_time' => $startDate,
+               'end_time' => $endDate,
+               'anumber' => '',
+          ])->json();
+           $data = @$response ?: [];
+          $sessionKeys = collect(@$data['data'] ?: [])->pluck('session_key');
+          $agentExt = collect(@$data['data'] ?: [])->pluck('agent_ext');
 
-          return $this->model::query()
-               ->leftJoin("view_status_table_mapper as st", function ($join) {
-                    $join->on("st.id", "tickets.status_id");
-                    $join->on("st.table_name", "tickets.status_table");
+          return   $this->model::query() // kalau model-nya masih Ticket, ganti jadi DB::table('calls')
+               ->from('calls')
+               ->leftJoin('tickets', 'calls.id', '=', 'tickets.call_id')
+               // ->join('outbound_status_master as er', function ($join) {
+               //      $join->on('er.company_id', '=', 'tickets.company_id');
+               // })
+               ->leftJoin('company_users as rs', function ($join) {
+                    $join->on('rs.user_id', '=', 'calls.agent_id');
+                    $join->on('rs.company_id', '=', 'calls.company_id');
                })
-               ->select([
-
-                    DB::raw("count(tickets.status) as total")
-               ])
-               ->where('tickets.company_id', $companyId)
+               ->selectRaw("
+                    tickets.ticket_number,
+                    calls.id as callsid,
+                    calls.sip,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.destination')) AS destination,
+                    JSON_UNQUOTE(JSON_EXTRACT(calls.sip_extension, '$.reg_name')) AS extension_number
+                  ")
+               // ->where('tickets.company_id', $companyId)
+               ->when($userRole->name === 'spv', function ($q) use ($userId) {
+                    return $q->where('tickets.spv_id', $userId);
+               })
+               ->where(function ($query) use ($sessionKeys, $agentExt) {
+                $query->whereIn('calls.sip', $sessionKeys->toArray());
+                if (count($agentExt)) {
+                    $query->orWhereIn(DB::raw('JSON_UNQUOTE(sip_extension->\'$.extension_number\')'), $agentExt);
+                }
+            })
                ->where('tickets.type', $type)
-               ->where('tickets.status','!=' ,'New')
-               ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-               ->orderByRaw("count(tickets.status) desc")
-               ->first();
+               // ->whereNotIn('er.status_category', ['New', 'Open'])
+               // ->whereRaw("date(tickets.ticket_date) BETWEEN '2025-11-11' AND '2025-11-11'")
+               // ->groupBy('tickets.ticket_number')
+               // ->orderByDesc('total')
+               ->get();
+          //    dd(\DB::getQueryLog());
+           
+
      }
 
      public function findFrequencyperleadSalescall($user, $dates, $type)
@@ -714,16 +750,24 @@ class DashboardTicketService
           $companyId = $user->company_id;
           $userId = $user->id;
           $userRole = $user->role;
-
-
-          return $this->call::query()
+          
+          // \DB::enableQueryLog();
+          return $this->model::query()
                ->select([
-                    DB::raw("sum(calls.total_duration) as total")
+                    DB::raw("SUM(calls.total_duration) AS total")
                ])
-               ->where('calls.company_id', $companyId)
-               ->where("calls.source_category", $type)
-               ->whereRaw("date(calls.created_at) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
-               ->get()->first();
+               ->join('calls', function ($join) {
+                    $join->on('calls.id', '=', 'tickets.call_id');
+               })
+               ->where('tickets.company_id', $companyId)
+               ->where('calls.source_category', $type)
+               ->when($userRole->name === 'spv', function ($q) use ($userId) {
+                    return $q->where('tickets.spv_id', $userId);
+               })
+               // ->whereRaw("date(tickets.ticket_date) between ? and ?", [$dates[0], $dates[count($dates) - 1]])
+               ->whereRaw("date(tickets.ticket_date) between '2025-11-11' and '2025-11-11'")
+               ->first();
+          // dd(\DB::getQueryLog());
      }
 
      public function findAllTicketByStatusCategoryTeamPerformance($user, $dates, $type, $filter = [])

@@ -16,6 +16,9 @@
             v-if="type == 'salescalls'"
             :salescalls="salescalls"
         />
+
+          <!-- ✅ INI YANG KURANG -->
+        <Dashprod v-if="type === 'dashboard-productivity'" />
     </AppLayout>
 </template>
 <script setup lang="ts">
@@ -25,6 +28,7 @@ import TabMenu from "./TabMenu.vue";
 import MarketingCampaign from "./MarketingCampaign.vue";
 import Product from "./Product.vue";
 import SalesCalls from "./SalesCalls.vue";
+import Dashprod from "./Dashprod.vue";
 
-defineProps(["type", "campaigns", "products", "salescalls"]);
+defineProps(["type", "campaigns", "products", "salescalls", "dashboard-productivity"]);
 </script>

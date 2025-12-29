@@ -52,6 +52,7 @@
             
 
             <MultipleSelect
+                class="wrap-options"
                 label="Escalation Division"
                 placeholder="Choose Escalation Division"
                 :items="escalations.map((row:any)=>{
@@ -263,8 +264,9 @@ const broadcastResponse = ref(["Yes", "No"]);
 const callOrigin = ref([
     "From Web",
     "From SIP",
-    "From Whatsapp Bot",
-    "From Web Bot",
+    // "From Whatsapp Bot",
+    // "From Web Bot",
+    "From Chatbot",
     "From Email",
     "From Incoming SIP",
     "From Whatsapp",
@@ -365,3 +367,10 @@ watch(
     }
 );
 </script>
+<style>
+.wrap-options .multiselect__option {
+    white-space: normal !important;
+    display: block !important;
+}
+
+</style>

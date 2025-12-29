@@ -1,0 +1,10 @@
+{
+  "labels": ["John Doe", "Jane Smith"],
+  "datasets": [
+    {
+      "label": "Ratio Keep Promise",
+      "data": [2, 3],
+      "backgroundColor": ["#3b82f6", "#22c55e"]
+    }
+  ]
+}

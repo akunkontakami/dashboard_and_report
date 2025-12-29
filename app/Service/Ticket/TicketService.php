@@ -39,7 +39,7 @@ class TicketService
                ->get();
 
           return $tickets->map(function ($row) {
-               $statusColor = in_array($row->status, ['New', 'From Bot', 'From Whatsapp Bot']) ? 'bg-offline' : match ($row->status_category) {
+               $statusColor = in_array($row->status, ['New', 'From Bot', 'From Whatsapp Bot','From Chatbot']) ? 'bg-offline' : match ($row->status_category) {
                     'Closed' => 'bg-online',
                     'Solved' => 'bg-blue',
                     'Open' => 'bg-kuning',

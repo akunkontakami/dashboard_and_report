@@ -18,7 +18,7 @@
             <td style="vertical-align: top;">{{ $row->customer_name }}</td>
             <td style="vertical-align: top;">
                 @foreach (@$row->comments['note'] ?: [] as $note)
-                    [ {{ $note->name ?: $row->customer_name }} - {{ date('d M Y H:i:s',strtotime($note->created_at)) }} ] : {{ $note->content }} <br>
+                    [ {{ $note->name ?: $row->customer_name }} - {{ date('d M Y H:i:s',strtotime($note->created_at)) }} ] : {{ $note->content }} {{ $note->file ? '('.$note->file.')' : '' }} <br>
                 @endforeach
             </td>
             <td style="vertical-align: top;">

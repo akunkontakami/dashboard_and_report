@@ -33,23 +33,23 @@
                 </Td>
                 <Td class="whitespace-nowrap">
                     <span v-if="type === 'inbound'">
-                        {{ row.helpdesk?.name || row.helpdesk_name }}
+                        {{ row.helpdesk?.name || row.helpdesk_name || "-" }}
                     </span>
                     <span v-if="type === 'outbound'">
-                        {{ row.campaign?.name }}
+                        {{ row.campaign?.name || "-" }}
                     </span>
                 </Td>
                 <Td class="whitespace-nowrap">
                     {{ row.product?.name || row.product_name || "-" }}
                 </Td>
-                <Td class="whitespace-nowrap">
+                <Td class="whitespace-nowrap flex items-center">
                     <a
                         href="javascript:;"
-                        class="text-[#F6A500] font-krub-semibold text-[12px] underline relative z-10"
+                        class="text-[#3943B7] font-krub-semibold text-[12px] underline relative py-3"
                         x-on:click="popupDescription=true"
                         @click.stop="showSubject(row.subject?.name || '-')"
                     >
-                        View Subject
+                    View Subject
                     </a>
                 </Td>
                 <Td class="whitespace-nowrap">

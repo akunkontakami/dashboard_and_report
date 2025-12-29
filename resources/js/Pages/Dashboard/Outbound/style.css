@@ -1,0 +1,138 @@
+
+
+.bg-blue-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(37 99 235 / var(--tw-bg-opacity, 1));
+}
+.summary-wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.summary-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.summary-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #2b2e34;
+  margin-bottom: 6px;
+}
+.summary-value {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+}
+.chart-wrapper {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+@media (max-width: 768px) {
+  .chart-wrapper {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+.descoll-main {
+  width: 65%;
+}
+
+@media (max-width: 768px) {
+  .descoll-main {
+    width: 100%;
+  }
+}
+
+/* =========================
+   GLOBAL WRAPPER
+========================= */
+main {
+  width: 100%;
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.summary-wrapper {
+  width: 100%;
+}
+
+/* =========================
+   CHART WRAPPER
+========================= */
+.chart-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  width: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Chart canvas fix (ChartJS) */
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* =========================
+   DESCOLL MAIN
+========================= */
+.descoll-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* =========================
+   RESPONSIVE BREAKPOINT
+========================= */
+
+/* 📱 Mobile */
+@media (max-width: 640px) {
+  .flex {
+    flex-direction: column;
+  }
+
+  .chart-wrapper {
+    min-height: 280px;
+  }
+
+  .w-2\/6 {
+    width: 100%;
+  }
+
+  .space-x-4 {
+    margin-left: 0;
+  }
+}
+
+/* 📲 Tablet */
+@media (max-width: 1024px) {
+  .flex {
+    flex-wrap: wrap;
+  }
+
+  .chart-wrapper {
+    width: 100%;
+  }
+
+  .w-2\/6 {
+    width: 100%;
+  }
+}
+
+/* 💻 Desktop (besar) */
+@media (min-width: 1280px) {
+  .chart-wrapper {
+    min-height: 360px;
+  }
+}

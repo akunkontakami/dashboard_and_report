@@ -53,7 +53,7 @@ class ReportTicketService
                $relations = ['campaign:id,name'];
           }
 
-
+          // \DB::enableQueryLog();
           $query = $this->model::query()
                ->with([
                     'product:id,name',
@@ -113,7 +113,7 @@ class ReportTicketService
                     'tickets.current_agent_id',
                     'tickets.spv_id',
                     'tickets.subject_id',
-                    'tickets.priority',
+                   DB::raw("IF(tickets.priority IS NULL OR tickets.priority = '', '-', tickets.priority) AS priority"),
                     'tickets.sla_resolution_time',
                     'tickets.sla_response_time',
                     'tickets.sla_division',
@@ -459,7 +459,8 @@ class ReportTicketService
                     ]
                ];
           }
-          return $this->model::query()
+          if($type == 'inbound'){
+              return $this->model::query()
                ->with($relations)
                ->where('tickets.company_id', $companyId)
                ->where('tickets.type', $type)
@@ -481,10 +482,10 @@ class ReportTicketService
                ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
                ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
                ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
-                    $query->whereIn('tickets.helpdesk_id', $helpdesk_id);
+                    $query->whereRelation('product.helpdeskName', fn($query) => $query->whereIn('helpdesk_id', $helpdesk_id));
                })
                ->when($campaign_id, function ($query) use ($campaign_id) {
-                    $query->whereIn('tickets.marketing_campaign_id', $campaign_id);
+                    $query->whereRelation('product.campaignName', fn($query) => $query->whereIn('marketing_campaign_id', $campaign_id));
                })
                ->select([
                     'tickets.id',
@@ -523,6 +524,76 @@ class ReportTicketService
                     }
                     return $items;
                });
+          }else {
+               return $this->model::query()
+               ->with($relations)
+               ->join('outbound_data_upload_buckets as b', 'tickets.outbound_data_upload_bucket_id', '=', 'b.id') // <-- JOIN ditambahkan
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.type', $type)
+               ->where('tickets.is_bucket', 0)
+               ->filterAgent($userRole, $userId, $companyId, $type, $escalationType)
+               ->when($created_start && $created_end, fn($query) => $query->whereBetween('tickets.created_at', [$created_start . " 00:00:00", $created_end . " 23:59:59"]))
+               ->when($modify_start && $modify_end, fn($query) => $query->whereBetween('tickets.ticket_date', [$modify_start . " 00:00:00", $modify_end . " 23:59:59"]))
+               ->when(
+                    $search,
+                    fn($q) => $q->where(function ($query) use ($search) {
+                         $query->where('tickets.product_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.customer_name', 'like', "%{$search}%");
+                         $query->orWhere('tickets.ticket_number', 'like', "%{$search}%");
+                    })
+               )
+               ->when($origins, fn($query) => $query->whereIn('tickets.source', $origins))
+               ->when($status, fn($query) => $query->whereIn('tickets.status', $status))
+               ->when($category, fn($query) => $query->whereIn('tickets.product_category', $category))
+               ->when($agent_id, fn($filter) => $filter->whereIn('tickets.current_agent_id', $agent_id))
+               ->when($spv_id, fn($filter) => $filter->whereIn('tickets.spv_id', $spv_id))
+               ->when($helpdesk_id, function ($query) use ($helpdesk_id) {
+                    $query->whereIn('tickets.helpdesk_id', $helpdesk_id);
+               })
+               ->when($campaign_id, function ($query) use ($campaign_id) {
+                    $query->whereIn('tickets.marketing_campaign_id', $campaign_id);
+               })
+               ->select([
+                    'tickets.id',
+                    'tickets.created_at',
+                    'tickets.number_id',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+                    'b.data',
+                    'b.customer_name as bucket_customer_name',
+               ])
+               ->orderBy('tickets.created_at', 'desc')
+               ->get()
+               ->map(function ($items) {
+                    if ($items->lastHistory) {
+                         $items->form = $items->lastHistory?->forms->groupBy('form_category')->map(function ($row) {
+                              return $row->groupBy('group_name')
+                                   ->map(function ($group) {
+                                        $fields = $group
+                                             ->sortBy('sorting')
+                                             ->each(function ($row) {
+                                                  if ($row->input_type == 'file') {
+                                                       $row->content = $row->content && $row->content!='' ? asset($row->content) : '';
+                                                  }
+                                             })
+                                             ->values();
+                                        return $fields;
+                                   });
+                         });
+                         $items->insured = $items->lastHistory?->insured;
+                         $items->beneficiary = $items->lastHistory?->beneficiary;
+                         unset($items->lastHistory->forms);
+                         unset($items->lastHistory->insured);
+                         unset($items->lastHistory->beneficiary);
+                    } else {
+                         $items->form = [];
+                         $items->insured = [];
+                         $items->beneficiary = [];
+                    }
+                    return $items;
+               });
+          }
+          
      }
 
 

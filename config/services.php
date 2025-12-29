@@ -45,5 +45,7 @@ return [
         'url' => env('YEASTAR_API_URL'),
         'username' => env('YEASTAR_API_USERNAME'),
         'password' => env('YEASTAR_API_PASSWORD'),
-    ]
+    ],
+    
+    'API_PBX_URL_V2' => env('API_PBX_URL_V2'),
 ];

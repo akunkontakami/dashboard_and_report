@@ -17,15 +17,16 @@ class OutboundDashboardController extends Controller
     public function index(Request $request,ProductService $productService,MarketingCampaignService $marketingCampaignService, $type)
     {
         $user = user();
-        $campaigns = $type=='marketing-campaign' ? $marketingCampaignService->findAllCampaignUser($user) : []; // marketing-campaign
-        $products = $type=='product' ? $productService->findAllProductUser($user,'outbound') : [];
-        $salescalls = $type=='salescalls' ? $marketingCampaignService->findAllCampaignUser($user) : []; // marketing-campaign
-
+        $campaigns = $type=='marketing-campaign' ? $marketingCampaignService->findAllCampaignUserDashboardMarketing($user) : []; // marketing-campaign
+        $products = $type=='product' ? $productService->findAllProductUserDashboard($user,'outbound') : [];
+        $salescalls = $type=='salescalls' ? $marketingCampaignService->findAllCampaignUserDashboardMarketing($user) : []; // marketing-campaign
+        $dashprod = $type=='dashboard-productivity'; // dashprod
         return Inertia::render("Dashboard/Outbound/Index", [
             "type" => $type,
             'salescalls' => $salescalls,
             'campaigns' => $campaigns,
-            'products' => $products
+            'products' => $products,
+            'dashboard-productivity' => $dashprod,
         ]);
     }
 

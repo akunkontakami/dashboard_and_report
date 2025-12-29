@@ -37,7 +37,8 @@
                  />
              </div>
              <div class="overflow-auto max-h-[80vh] text-[13px] mt-2 sm:rounded-lg px-6 pb-6">
-                 <p class="wrap-text-line">{{ description }}</p>
+                <div class="bg-[#F4F6FA] p-3 rounded-[4px] w-full text-[13px] text-[#181C32] font-opensauceone-medium break-all"> <p class="wrap-text-line">{{ description }}</p></div>
+                
              </div>
          </div>
      </div>

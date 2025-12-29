@@ -8,6 +8,12 @@ export default {
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
     ],
+    safelist: [
+    'bg-kuning',
+    'bg-online',
+    'bg-offline',
+    'bg-blue',
+  ],
 
     theme: {
         extend: {

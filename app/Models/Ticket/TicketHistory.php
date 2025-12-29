@@ -85,7 +85,8 @@ class TicketHistory extends Model
                 'ticket_comments.content',
                 'ticket_comments.created_at',
                 'ticket_comments.ticket_id',
-                'company_users.name'
+                'company_users.name',
+                'ticket_comments.file',
             ])
             ->orderBy('ticket_comments.created_at', 'asc');
     }
