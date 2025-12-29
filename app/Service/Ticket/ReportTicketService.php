@@ -15,7 +15,7 @@ class ReportTicketService
      ) {
      }
 
-     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = null)
+     public function findAllTicketListReportData2($user, $filter, $search, $type, $paginate = null)
      {
           $companyId = $user->company_id;
           $userId = $user->id;
@@ -137,6 +137,141 @@ class ReportTicketService
           // dump final SQL & bindings for debugging
           // dump($query->toSql(), $query->getBindings());
           return $paginate ? $query->paginate($paginate) : $query->get();
+     }
+
+     public function findAllTicketListReportData($user, $filter, $search, $type, $paginate = null)
+     {
+          $companyId = $user->company_id;
+          $userId    = $user->id;
+
+          $created_start = $filter['created_start'] ?? null;
+          $created_end   = $filter['created_end'] ?? null;
+
+          // validasi tanggal (sesuai logic lama)
+          if (!$created_start || !$created_end) {
+               return [];
+          }
+
+          $query = $this->model::query()
+
+               /* ================= JOIN ================= */
+
+               ->leftJoin('tickets as ref', 'ref.id', '=', 'tickets.ref_ticket_number_id')
+
+               ->leftJoin('company_helpdesk_categories as hp', 'tickets.helpdesk_id', '=', 'hp.id')
+
+               ->leftJoin('view_status_table_mapper as st', function ($join) {
+                    $join->on('st.id', '=', 'tickets.status_id');
+                    $join->on('st.table_name', '=', 'tickets.status_table');
+               })
+
+               ->leftJoin('company_customer_contacts as c', function ($join) {
+                    $join->on('c.customer_id', '=', 'tickets.customer_id');
+                    $join->on('c.company_id', '=', 'tickets.company_id');
+               })
+
+               ->leftJoin('users as u', function ($join) {
+                    $join->on('u.id', '=', 'tickets.customer_id');
+                    $join->where('u.role', '=', 'customer');
+               })
+
+               /* ================= WHERE UTAMA ================= */
+
+               ->where('tickets.type', $type)
+               ->where('tickets.company_id', $companyId)
+               ->where('tickets.is_bucket', 0)
+               ->where('tickets.visible', 1)
+
+               /* ================= FILTER TANGGAL ================= */
+
+               ->whereBetween('tickets.created_at', [
+                    $created_start . ' 00:00:00',
+                    $created_end . ' 23:59:59'
+               ])
+
+               /* ================= ESCALATION CONDITION ================= */
+
+               ->where(function ($q) use ($userId, $companyId) {
+
+                    // CASE 1
+                    $q->where(function ($q1) use ($userId, $companyId) {
+                         $q1->whereIn('tickets.escalation_team_id', function ($sub) use ($userId, $companyId) {
+                              $sub->select('escalation_team_id')
+                              ->from('escalation_team_members')
+                              ->where('user_id', $userId)
+                              ->where('company_id', $companyId);
+                         })
+                         ->whereNull('tickets.current_agent_id');
+                    })
+
+                    // OR CASE 2
+                    ->orWhere(function ($q2) use ($userId, $companyId) {
+                         $q2->whereIn('tickets.current_agent_id', function ($sub) use ($userId, $companyId) {
+                              $sub->select('team_id')
+                              ->from('view_escalation_user_team')
+                              ->where('user_id', $userId)
+                              ->where('company_id', $companyId);
+                         })
+                         ->whereNotNull('tickets.escalation_team_id');
+                    });
+
+               })
+
+               /* ================= SEARCH (optional) ================= */
+
+               ->when($search, function ($q) use ($search) {
+                    $q->where(function ($s) use ($search) {
+                         $s->where('tickets.ticket_number', 'like', "%{$search}%")
+                         ->orWhere('tickets.customer_name', 'like', "%{$search}%")
+                         ->orWhere('tickets.product_name', 'like', "%{$search}%");
+                    });
+               })
+
+               /* ================= SELECT ================= */
+
+               ->select([
+                    'tickets.ticket_date as updated_at',
+                    'tickets.created_at',
+                    'tickets.source as call_origin',
+                    'tickets.ticket_number',
+                    'tickets.customer_name',
+                    'tickets.product_category',
+                    'tickets.product_name',
+                    'tickets.product_id',
+                    'tickets.status',
+                    'tickets.current_agent_id',
+                    'tickets.spv_id',
+                    'tickets.subject_id',
+                    DB::raw("IF(tickets.priority IS NULL OR tickets.priority = '', '-', tickets.priority) AS priority"),
+                    'tickets.sla_resolution_time',
+                    'tickets.sla_response_time',
+                    'tickets.sla_division',
+                    'tickets.escalation_team_id',
+                    'tickets.status_id',
+                    'tickets.status_table',
+                    'st.status_category',
+                    'tickets.note',
+                    'tickets.remark',
+                    'tickets.helpdesk_id',
+                    'tickets.marketing_campaign_id',
+                    'tickets.is_broadcasted',
+                    'tickets.outbound_data_upload_bucket_id',
+                    DB::raw("IFNULL(c.email, u.email) AS customer_email"),
+               ])
+
+               ->groupBy('tickets.id')
+
+               ->orderByRaw('
+                    tickets.ticket_date DESC,
+                    tickets.outbound_data_upload_bucket_id ASC,
+                    tickets.id ASC
+               ');
+
+          /* ================= RETURN ================= */
+
+          return $paginate
+               ? $query->paginate($paginate)
+               : $query->get();
      }
 
 
